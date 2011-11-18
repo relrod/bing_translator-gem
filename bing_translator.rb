@@ -18,9 +18,9 @@ class BingTranslator
     if params[:to].nil? or params[:from].nil?
       raise "Must provide :to and :from."
     else
-      to = CGI.escape params[:to]
-      from = CGI.escape params[:from]
-      text = CGI.escape text
+      to = CGI.escape params[:to].to_s
+      from = CGI.escape params[:from].to_s
+      text = CGI.escape text.to_s
       uri = URI.parse(TRANSLATE_URI)
       params = {
         'to' => to,
