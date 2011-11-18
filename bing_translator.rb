@@ -10,11 +10,8 @@ require 'nokogiri'
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
   
-  def initialize(params = {})
-    if params[:api_key].nil?
-      raise "Must pass :api_key when initializing BingTranslator"
-    end
-    @api_key = params[:api_key]
+  def initialize(api_key)
+    @api_key = api_key
   end
   
   def translate(text, params = {})
