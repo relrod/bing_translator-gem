@@ -1,28 +1,26 @@
 #!/usr/bin/env ruby
+# (c) 2011-present. Ricky Elrod <ricky@elrod.me>
+# Released under the MIT license.
 require 'rubygems'
 require 'cgi'
 require 'uri'
 require 'net/http'
 require 'nokogiri'
-require 'pp'
 
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
   
-  def initialize(params = {})
-    if params[:api_key].nil?
-      raise "Must pass :api_key when initializing BingTranslator"
-    end
-    @api_key = params[:api_key]
+  def initialize(api_key)
+    @api_key = api_key
   end
   
-  def translate(params = {})
-    if params[:to].nil? or params[:from].nil? or params[:text].nil?
-      raise "Must provide :to, :from, and :text."
+  def translate(text, params = {})
+    if params[:to].nil? or params[:from].nil?
+      raise "Must provide :to and :from."
     else
-      to = CGI.escape params[:to]
-      from = CGI.escape params[:from]
-      text = CGI.escape params[:text]
+      to = CGI.escape params[:to].to_s
+      from = CGI.escape params[:from].to_s
+      text = CGI.escape text.to_s
       uri = URI.parse(TRANSLATE_URI)
       params = {
         'to' => to,
