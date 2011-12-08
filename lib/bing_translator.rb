@@ -9,32 +9,49 @@ require 'nokogiri'
 
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
+  DETECT_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Detect'
   
   def initialize(api_key)
     @api_key = api_key
+    @translate_uri = URI.parse TRANSLATE_URI
+    @detect_uri = URI.parse DETECT_URI
   end
   
   def translate(text, params = {})
-    if params[:to].nil? or params[:from].nil?
-      raise "Must provide :to and :from."
-    else
-      to = CGI.escape params[:to].to_s
-      from = CGI.escape params[:from].to_s
-      text = CGI.escape text.to_s
-      uri = URI.parse(TRANSLATE_URI)
-      params = {
-        'to' => to,
-        'from' => from,
-        'text' => text,
-        'appId' => @api_key,
-        'category' => 'general',
-        'contentType' => 'text/plain'
-      }
-      params_s = params.map {|key, value| "#{key}=#{value}"}.join '&'
-      result = Net::HTTP.new(uri.host, uri.port)
-      result = result.get("#{uri.path}?#{params_s}")
-      noko = Nokogiri.parse(result.body)
-      noko.xpath("//xmlns:string")[0].content
-    end
+    raise "Must provide :to." if params[:to].nil?
+
+    from = CGI.escape params[:from].to_s
+    params = {
+      'to' => CGI.escape(params[:to].to_s),
+      'text' => CGI.escape(text.to_s),
+      'appId' => @api_key,
+      'category' => 'general',
+      'contentType' => 'text/plain'
+    }
+    params[:from] = from unless from.empty?
+    result = result @translate_uri, params
+
+    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content
+  end
+  
+  def detect(text)
+    params = {
+      'text' => CGI.escape(text.to_s),
+      'appId' => @api_key,
+      'category' => 'general',
+      'contentType' => 'text/plain'
+    }
+    result = result @detect_uri, params
+
+    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content.to_sym
+  end
+
+private
+  def prepare_param_string(params)
+    params.map {|key, value| "#{key}=#{value}"}.join '&'
+  end
+
+  def result(uri, params)
+    result = Net::HTTP.new(uri.host, uri.port).get("#{uri.path}?#{prepare_param_string(params)}")
   end
 end
