@@ -7,4 +7,5 @@ Gem::Specification.new do |s|
   s.authors     = ["Ricky Elrod"]
   s.email       = 'ricky@elrod.me'
   s.files       = ["lib/bing_translator.rb"]
+  s.add_dependency "nokogiri", "~> 1.5.0"
 end
