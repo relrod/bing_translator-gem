@@ -1,5 +1,5 @@
-require 'lib/bing_translator.rb'
-$KCODE='u'
+# encoding: utf-8
+require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 
 describe BingTranslator do
   before(:each) do

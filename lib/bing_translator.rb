@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: utf-8
 # (c) 2011-present. Ricky Elrod <ricky@elrod.me>
 # Released under the MIT license.
 require 'rubygems'
