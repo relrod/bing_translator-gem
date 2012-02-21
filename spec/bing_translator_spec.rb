@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 describe BingTranslator do
   before(:each) do
     @message_en = "This message should be translated"
-    @translator = BingTranslator.new "Your_API_Key"
+    @translator = BingTranslator.new '943AA28F2F3EC2EF323FC9D1B4A1EFC80D4CB5B8'
   end
 
   it "should translate text" do
@@ -12,7 +12,7 @@ describe BingTranslator do
     result.should == "Это сообщение должно быть переведено"
 
     result = @translator.translate @message_en, :from => :en, :to => :fr
-    result.should == "Ce message devrait être traduit."
+    result.should == "Ce message doit être traduit"
 
     result = @translator.translate @message_en, :from => :en, :to => :de
     result.should == "Diese Nachricht sollte übersetzt werden"
@@ -38,5 +38,10 @@ describe BingTranslator do
 
     result = @translator.detect "Diese Nachricht sollte übersetzt werden"
     result.should == :de
+  end
+
+  it "should be able to list languages that the API supports" do
+    result = @translator.supported_language_codes
+    result.include?('en').should == true
   end
 end

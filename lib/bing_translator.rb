@@ -11,11 +11,13 @@ require 'nokogiri'
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
   DETECT_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Detect'
+  LANG_CODE_LIST_URI = 'http://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate'
   
   def initialize(api_key)
     @api_key = api_key
     @translate_uri = URI.parse TRANSLATE_URI
     @detect_uri = URI.parse DETECT_URI
+    @list_codes_uri = URI.parse LANG_CODE_LIST_URI
   end
   
   def translate(text, params = {})
@@ -45,6 +47,12 @@ class BingTranslator
     result = result @detect_uri, params
 
     Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content.to_sym
+  end
+
+  def supported_language_codes
+    params = {'appId' => @api_key}
+    result = result @list_codes_uri, params
+    Nokogiri.parse(result.body).xpath("//xmlns:string").map(&:content)
   end
 
 private
