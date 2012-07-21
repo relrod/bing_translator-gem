@@ -22,7 +22,7 @@ With bundler:
 Information
 ===========
 
-Version 1.0.0+ of bing\_translator use the new OAuth-based Bing
+Version 2.0.0+ of bing\_translator use the new OAuth-based Bing
 authentication.
 
 bing\_translator is also smart about requesting the token, and handles this
