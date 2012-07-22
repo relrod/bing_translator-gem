@@ -93,6 +93,7 @@ private
     http.use_ssl = true
     response = http.post(@access_token_uri.path, prepare_param_string(params))
     @access_token = JSON.parse(response.body)
+    raise "Authentication error: #{@access_token['error']}" if @access_token["error"]
     @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
     @access_token
   end
