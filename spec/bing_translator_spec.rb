@@ -13,7 +13,7 @@ describe BingTranslator do
     result.should == "Это сообщение должно быть переведены"
 
     result = @translator.translate @message_en, :from => :en, :to => :fr
-    result.should == "Ce message doit être traduit"
+    result.should == "Ce message devrait être traduit."
 
     result = @translator.translate @message_en, :from => :en, :to => :de
     result.should == "Diese Meldung sollte übersetzt werden"
