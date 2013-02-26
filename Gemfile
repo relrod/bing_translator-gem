@@ -1,4 +1,4 @@
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gem "rspec", "~> 2.7.0"
 gem "nokogiri", "~> 1.5.0"
