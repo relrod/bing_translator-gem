@@ -64,7 +64,9 @@ spanish = translator.translate 'Hello. This will be translated!', :to => 'es'
 
 locale = translator.detect 'Hello. This will be translated!' # => :en
 
-# The speak method is a text-to-speech interface in the
+# The speak method calls a text-to-speech interface in the supplied language. It does not translate the text.
+# Output can be in 'audio/mp3' or 'audio/wav' formats
+
 audio = translator.speak 'Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality'
 open('file.mp3', 'wb') { |f| f.write audio }
 
