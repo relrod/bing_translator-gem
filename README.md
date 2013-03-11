@@ -1,7 +1,7 @@
 Bing Translator
 ===============
 
-This gem wraps the Micrsoft Bing HTTP Translate API.
+This gem wraps the Microsoft Bing HTTP Translate API.
 I am in no way affiliated with Microsoft or Bing.
 Use this gem at your own risk.
 
@@ -22,8 +22,10 @@ With bundler:
 Information
 ===========
 
-Version 2.0.0+ of bing\_translator use the new OAuth-based Bing
+Version 2.0.0+ of bing\_translator uses the new OAuth-based Bing
 authentication.
+
+Documentation on the Microsoft Translator API is [here](http://msdn.microsoft.com/en-us/library/ff512419.aspx)
 
 bing\_translator is also smart about requesting the token, and handles this
 behind the scenes. It will only request a token if it knows the old one
@@ -61,4 +63,7 @@ spanish = translator.translate 'Hello. This will be translated!', :from => 'en',
 spanish = translator.translate 'Hello. This will be translated!', :to => 'es'
 
 locale = translator.detect 'Hello. This will be translated!' # => :en
+
+audio = translator.speak 'Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality'
+open('file.mp3', 'wb') { |f| f.write }
 ```
