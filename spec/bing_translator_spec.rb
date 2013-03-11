@@ -13,7 +13,7 @@ describe BingTranslator do
     result.should == "Это сообщение должно быть переведены"
 
     result = @translator.translate @message_en, :from => :en, :to => :fr
-    result.should == "Ce message devrait être traduit."
+    result.should == "Ce message devrait être traduit"
 
     result = @translator.translate @message_en, :from => :en, :to => :de
     result.should == "Diese Meldung sollte übersetzt werden"
@@ -39,6 +39,24 @@ describe BingTranslator do
 
     result = @translator.detect "Diese Meldung sollte übersetzt werden"
     result.should == :de
+  end
+
+  it "should return audio data from the text to speech interface" do
+    result = @translator.speak @message_en, :language => 'en'
+    result.length.should > 1000
+
+    result = @translator.speak "Это сообщение должно быть переведены", :language => 'ru'
+    result.length.should > 1000
+
+    result = @translator.speak "Ce message devrait être traduit", :language => 'fr'
+    result.length.should > 1000
+
+    result = @translator.speak "Diese Meldung sollte übersetzt werden", :language => 'de'
+    result.length.should > 1000
+
+    result = @translator.speak "Diese Meldung sollte übersetzt werden", :language => 'de', :format => 'audio/wav', :options => 'MaxQuality'
+    result.length.should > 1000
+
   end
 
   it "should be able to list languages that the API supports" do
