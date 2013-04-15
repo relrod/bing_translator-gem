@@ -6,7 +6,7 @@ I am in no way affiliated with Microsoft or Bing.
 Use this gem at your own risk.
 
 Released under MIT.
-Tested with MRI 1.9.3 and 1.8.7.
+Tested with MRI 2.0.0, 1.9.3 and 1.8.7.
 
 Installation
 ============
@@ -17,7 +17,7 @@ To use this rubygem:
 
 With bundler:
 
-    gem "bing_translator", "~> 3.0.0"
+    gem "bing_translator", "~> 3.1.0"
 
 Information
 ===========
