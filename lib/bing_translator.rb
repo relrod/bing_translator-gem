@@ -17,7 +17,7 @@ class BingTranslator
   ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
   SPEAK_URI = 'http://api.microsofttranslator.com/v2/Http.svc/Speak'
 
-  def initialize(client_id, client_secret)
+  def initialize(client_id, client_secret, skip_ssl_verify = true)
     @client_id = client_id
     @client_secret = client_secret
     @translate_uri = URI.parse TRANSLATE_URI
@@ -25,6 +25,7 @@ class BingTranslator
     @list_codes_uri = URI.parse LANG_CODE_LIST_URI
     @access_token_uri = URI.parse ACCESS_TOKEN_URI
     @speak_uri = URI.parse SPEAK_URI
+    @skip_ssl_verify = skip_ssl_verify ? true : false
   end
 
   def translate(text, params = {})
@@ -84,10 +85,14 @@ private
 
   def result(uri, params={}, headers={})
     get_access_token
-    headers['Authorization'] = "Bearer #{@access_token['access_token']}"
-    result = Net::HTTP.new(uri.host, uri.port).get(
-      "#{uri.path}?#{prepare_param_string(params)}",
-      headers)
+    http = Net::HTTP.new(uri.host, uri.port)
+        if uri.scheme == "https"
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+        end
+                        
+        results = http.get("#{uri.path}?#{prepare_param_string(params)}",
+                           { 'Authorization' => "Bearer #{@access_token['access_token']}" })
   end
 
   # Private: Get a new access token
@@ -112,6 +117,8 @@ private
 
     http = Net::HTTP.new(@access_token_uri.host, @access_token_uri.port)
     http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+    
     response = http.post(@access_token_uri.path, prepare_param_string(params))
     @access_token = JSON.parse(response.body)
     raise "Authentication error: #{@access_token['error']}" if @access_token["error"]
