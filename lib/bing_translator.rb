@@ -17,7 +17,7 @@ class BingTranslator
   ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
   SPEAK_URI = 'http://api.microsofttranslator.com/v2/Http.svc/Speak'
 
-  def initialize(client_id, client_secret, skip_ssl_verify = true)
+  def initialize(client_id, client_secret, skip_ssl_verify = false)
     @client_id = client_id
     @client_secret = client_secret
     @translate_uri = URI.parse TRANSLATE_URI
@@ -86,13 +86,16 @@ private
   def result(uri, params={}, headers={})
     get_access_token
     http = Net::HTTP.new(uri.host, uri.port)
-        if uri.scheme == "https"
-          http.use_ssl = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
-        end
+    if uri.scheme == "https"
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+    end
                         
-        results = http.get("#{uri.path}?#{prepare_param_string(params)}",
-                           { 'Authorization' => "Bearer #{@access_token['access_token']}" })
+    results = http.get(
+      "#{uri.path}?#{prepare_param_string(params)}",
+        { 
+          'Authorization' => "Bearer #{@access_token['access_token']}" 
+        })
   end
 
   # Private: Get a new access token
