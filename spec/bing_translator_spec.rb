@@ -56,6 +56,10 @@ describe BingTranslator do
 
     result = @translator.speak "Diese Meldung sollte übersetzt werden", :language => 'de', :format => 'audio/wav', :options => 'MaxQuality'
     result.length.should > 1000
+  end
+
+  it "should throw a reasonable error when the Bing translate API doesn't give 200" do
+    expect { @translator.translate 'hola', :from => :invlaid, :to => :en }.to raise_error(BingTranslatorException)
 
   end
 

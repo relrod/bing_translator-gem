@@ -10,6 +10,8 @@ require 'net/https'
 require 'nokogiri'
 require 'json'
 
+class BingTranslatorException < Exception; end
+
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
   DETECT_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Detect'
@@ -97,6 +99,13 @@ private
       {
         'Authorization' => "Bearer #{@access_token['access_token']}"
       })
+
+    if results.response.code.to_i == 200
+      results
+    else
+      html = Nokogiri::HTML(results.body)
+      raise BingTranslatorException, html.xpath("//text()").remove.map(&:to_s).join(' ')
+    end
   end
 
   # Private: Get a new access token
