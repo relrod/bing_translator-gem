@@ -45,7 +45,7 @@ class BingTranslator
     params[:from] = from unless from.empty?
     result = result @translate_uri, params
 
-    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content
+    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content
   end
 
   def detect(text)
@@ -56,7 +56,7 @@ class BingTranslator
     }
     result = result @detect_uri, params
 
-    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content.to_sym
+    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content.to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
