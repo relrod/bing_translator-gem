@@ -11,6 +11,7 @@ require 'nokogiri'
 require 'json'
 
 class BingTranslatorException < Exception; end
+class BingTranslatorAuthenticationException < Exception; end
 
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
@@ -44,7 +45,7 @@ class BingTranslator
     params[:from] = from unless from.empty?
     result = result @translate_uri, params
 
-    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content
+    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content
   end
 
   def detect(text)
@@ -55,7 +56,7 @@ class BingTranslator
     }
     result = result @detect_uri, params
 
-    Nokogiri.parse(result.body).xpath("//xmlns:string")[0].content.to_sym
+    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content.to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
@@ -134,7 +135,7 @@ private
 
     response = http.post(@access_token_uri.path, prepare_param_string(params))
     @access_token = JSON.parse(response.body)
-    raise "Authentication error: #{@access_token['error']}" if @access_token["error"]
+    raise BingTranslatorAuthenticationException, @access_token['error'] if @access_token["error"]
     @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
     @access_token
   end
