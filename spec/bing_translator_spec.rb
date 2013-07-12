@@ -60,7 +60,7 @@ describe BingTranslator do
   end
 
   it "throws a reasonable error when the Bing translate API doesn't give 200" do
-    expect { translator.translate 'hola', :from => :invlaid, :to => :en }.to raise_error(BingTranslatorException)
+    expect { translator.translate 'hola', :from => :invlaid, :to => :en }.to raise_error(BingTranslator::Exception)
   end
 
   it "is able to list languages that the API supports" do
@@ -70,7 +70,7 @@ describe BingTranslator do
 
   it "throws a BingTranslatorAuthenticationException exception on invalid credentials" do
     translator = BingTranslator.new("", "")
-    expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslatorAuthenticationException)
+    expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslator::AuthenticationException)
   end
 
 end

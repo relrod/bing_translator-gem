@@ -10,15 +10,15 @@ require 'net/https'
 require 'nokogiri'
 require 'json'
 
-class BingTranslatorException < Exception; end
-class BingTranslatorAuthenticationException < Exception; end
-
 class BingTranslator
   TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
   DETECT_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Detect'
   LANG_CODE_LIST_URI = 'http://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate'
   ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
   SPEAK_URI = 'http://api.microsofttranslator.com/v2/Http.svc/Speak'
+
+  class Exception < StandardError; end
+  class AuthenticationException < StandardError; end
 
   def initialize(client_id, client_secret, skip_ssl_verify = false)
     @client_id = client_id
@@ -105,7 +105,7 @@ private
       results
     else
       html = Nokogiri::HTML(results.body)
-      raise BingTranslatorException, html.xpath("//text()").remove.map(&:to_s).join(' ')
+      raise Exception, html.xpath("//text()").remove.map(&:to_s).join(' ')
     end
   end
 
@@ -135,7 +135,7 @@ private
 
     response = http.post(@access_token_uri.path, prepare_param_string(params))
     @access_token = JSON.parse(response.body)
-    raise BingTranslatorAuthenticationException, @access_token['error'] if @access_token["error"]
+    raise AuthenticationException, @access_token['error'] if @access_token["error"]
     @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
     @access_token
   end
