@@ -67,4 +67,10 @@ describe BingTranslator do
     result = @translator.supported_language_codes
     result.include?('en').should == true
   end
+
+  it "should throw a BingTranslatorAuthenticationException exception on invalid credentials" do
+    translator = BingTranslator.new("", "")
+    expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslatorAuthenticationException)
+  end
+
 end
