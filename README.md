@@ -56,7 +56,7 @@ Usage
 ```ruby
 require 'rubygems'
 require 'bing_translator'
-translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET')
+translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET', 'AZURE_ACCOUNT_KEY')
 spanish = translator.translate 'Hello. This will be translated!', :from => 'en', :to => 'es'
 
 # without :from for auto language detection
@@ -69,5 +69,8 @@ locale = translator.detect 'Hello. This will be translated!' # => :en
 
 audio = translator.speak 'Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality'
 open('file.mp3', 'wb') { |f| f.write audio }
+
+# Account balance
+translator.balance # => 20000
 
 ```

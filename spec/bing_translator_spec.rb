@@ -6,7 +6,9 @@ describe BingTranslator do
   let(:message_en) { "This message should be translated" }
   let(:translator) {
     BingTranslator.new(ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
-      ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'])
+      ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
+      false,
+      ENV['AZURE_TEST_ACCOUNT_KEY'])
   }
 
   it "translates text" do
@@ -73,4 +75,21 @@ describe BingTranslator do
     expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslator::AuthenticationException)
   end
 
+  describe "#balance" do
+    context "when azure account key has been defined" do
+      it "returns the balance" do
+        balance = translator.balance
+
+        balance.should be_a Fixnum
+      end
+    end
+
+    context "when azure account has been defined" do
+      let(:translator) { BingTranslator.new("", "") }
+
+      it "raises an exception" do
+        expect { translator.balance }.to raise_error
+      end
+    end
+  end
 end

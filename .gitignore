@@ -3,3 +3,6 @@ test.rb
 *~
 *.gem
 *.swp
+.env
+.rbenv-vars
+
