@@ -56,7 +56,13 @@ Usage
 ```ruby
 require 'rubygems'
 require 'bing_translator'
-translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET', 'AZURE_ACCOUNT_KEY')
+
+# Specify all arguments
+translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET', false, 'AZURE_ACCOUNT_KEY')
+
+# Or... Specify only required arguments
+translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET')
+
 spanish = translator.translate 'Hello. This will be translated!', :from => 'en', :to => 'es'
 
 # without :from for auto language detection
