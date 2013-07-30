@@ -16,13 +16,15 @@ class BingTranslator
   LANG_CODE_LIST_URI = 'http://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate'
   ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
   SPEAK_URI = 'http://api.microsofttranslator.com/v2/Http.svc/Speak'
+  DATASETS_URI = "https://api.datamarket.azure.com/Services/My/Datasets?$format=json"
 
   class Exception < StandardError; end
   class AuthenticationException < StandardError; end
 
-  def initialize(client_id, client_secret, skip_ssl_verify = false)
+  def initialize(client_id, client_secret, account_key = nil, skip_ssl_verify = false)
     @client_id = client_id
     @client_secret = client_secret
+    @account_key = account_key
     @skip_ssl_verify = skip_ssl_verify
 
     @translate_uri = URI.parse TRANSLATE_URI
@@ -30,6 +32,7 @@ class BingTranslator
     @list_codes_uri = URI.parse LANG_CODE_LIST_URI
     @access_token_uri = URI.parse ACCESS_TOKEN_URI
     @speak_uri = URI.parse SPEAK_URI
+    @datasets_uri = URI.parse DATASETS_URI
   end
 
   def translate(text, params = {})
@@ -82,7 +85,26 @@ class BingTranslator
   end
 
 
+  def balance
+    datasets["d"]["results"].each do |result|
+      return result["ResourceBalance"] if result["ProviderName"] == "Microsoft Translator"
+    end
+  end
+
 private
+  def datasets
+    raise "Must provide account key" if @account_key.nil?
+
+    http = Net::HTTP.new(@datasets_uri.host, @datasets_uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = Net::HTTP::Get.new(@datasets_uri.request_uri)
+    request.basic_auth("", @account_key)
+    response = http.request(request)
+
+    JSON.parse response.body
+  end
+
   def prepare_param_string(params)
     params.map { |key, value| "#{key}=#{value}" }.join '&'
   end
