@@ -7,6 +7,7 @@ describe BingTranslator do
   let(:translator) {
     BingTranslator.new(ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
       ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
+      false,
       ENV['AZURE_TEST_ACCOUNT_KEY'])
   }
 

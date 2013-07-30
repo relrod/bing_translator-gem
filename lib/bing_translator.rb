@@ -21,7 +21,7 @@ class BingTranslator
   class Exception < StandardError; end
   class AuthenticationException < StandardError; end
 
-  def initialize(client_id, client_secret, account_key = nil, skip_ssl_verify = false)
+  def initialize(client_id, client_secret, skip_ssl_verify = false, account_key = nil)
     @client_id = client_id
     @client_secret = client_secret
     @account_key = account_key
