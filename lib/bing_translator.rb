@@ -93,7 +93,7 @@ class BingTranslator
 
 private
   def datasets
-    raise "Must provide account key" if @account_key.nil?
+    raise AuthenticationException, "Must provide account key" if @account_key.nil?
 
     http = Net::HTTP.new(@datasets_uri.host, @datasets_uri.port)
     http.use_ssl = true
