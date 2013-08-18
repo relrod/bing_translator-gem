@@ -40,10 +40,10 @@ class BingTranslator
 
     from = CGI.escape params[:from].to_s
     params = {
-      'to' => CGI.escape(params[:to].to_s),
-      'text' => CGI.escape(text.to_s),
-      'category' => 'general',
-      'contentType' => 'text/plain'
+      'to'          => CGI.escape(params[:to].to_s),
+      'text'        => CGI.escape(text.to_s),
+      'category'    => 'general',
+      'contentType' => params[:content_type] || 'text/plain'
     }
     params[:from] = from unless from.empty?
     result = result @translate_uri, params
