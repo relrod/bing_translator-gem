@@ -1,7 +1,7 @@
 Bing Translator
 ===============
 
-This gem wraps the Microsoft Bing HTTP Translate API.
+This gem wraps the Microsoft Bing SOAP Translate API.
 I am in no way affiliated with Microsoft or Bing.
 Use this gem at your own risk.
 
