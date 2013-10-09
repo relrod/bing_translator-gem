@@ -11,4 +11,5 @@ Gem::Specification.new do |s|
   s.licenses    = ["MIT"]
   s.add_dependency "nokogiri", "~> 1.6.0"
   s.add_dependency "json", "~> 1.8.0"
+  s.add_dependency "savon", "~> 2.0"
 end

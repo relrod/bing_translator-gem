@@ -5,4 +5,4 @@ test.rb
 *.swp
 .env
 .rbenv-vars
-
+*.log

@@ -9,13 +9,12 @@ require 'net/http'
 require 'net/https'
 require 'nokogiri'
 require 'json'
+require 'savon'
 
 class BingTranslator
-  TRANSLATE_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Translate'
-  DETECT_URI = 'http://api.microsofttranslator.com/V2/Http.svc/Detect'
-  LANG_CODE_LIST_URI = 'http://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate'
+  WSDL_URI = 'http://api.microsofttranslator.com/V2/soap.svc?wsdl'
+  NAMESPACE_URI = 'http://api.microsofttranslator.com/V2'
   ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
-  SPEAK_URI = 'http://api.microsofttranslator.com/v2/Http.svc/Speak'
   DATASETS_URI = "https://api.datamarket.azure.com/Services/My/Datasets?$format=json"
 
   class Exception < StandardError; end
@@ -27,39 +26,32 @@ class BingTranslator
     @account_key = account_key
     @skip_ssl_verify = skip_ssl_verify
 
-    @translate_uri = URI.parse TRANSLATE_URI
-    @detect_uri = URI.parse DETECT_URI
-    @list_codes_uri = URI.parse LANG_CODE_LIST_URI
     @access_token_uri = URI.parse ACCESS_TOKEN_URI
-    @speak_uri = URI.parse SPEAK_URI
     @datasets_uri = URI.parse DATASETS_URI
   end
 
   def translate(text, params = {})
     raise "Must provide :to." if params[:to].nil?
 
-    from = CGI.escape params[:from].to_s
+    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
     params = {
-      'to'          => CGI.escape(params[:to].to_s),
-      'text'        => CGI.escape(text.to_s),
+      'text'        => text.to_s,
+      'from'        => params[:from].to_s,
+      'to'          => params[:to].to_s,
       'category'    => 'general',
       'contentType' => params[:content_type] || 'text/plain'
     }
-    params[:from] = from unless from.empty?
-    result = result @translate_uri, params
-
-    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content
+    
+    result(:translate, params).body[:translate_response][:translate_result]
   end
 
   def detect(text)
     params = {
-      'text' => CGI.escape(text.to_s),
-      'category' => 'general',
-      'contentType' => 'text/plain'
+      'text'     => text.to_s,
+      'language' => '',
     }
-    result = result @detect_uri, params
 
-    Nokogiri.parse(result.body).at_xpath("//xmlns:string").content.to_sym
+    result = result(:detect, params).body[:detect_response][:detect_result].to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
@@ -69,19 +61,31 @@ class BingTranslator
     raise "Must provide :language" if params[:language].nil?
 
     params = {
-      'format' => CGI.escape(params[:format].to_s),
-      'text' => CGI.escape(text.to_s),
-      'language' => params[:language].to_s
+      'text'     => text.to_s,
+      'language' => params[:language].to_s,
+      'format'   => params[:format] || 'audio/wav',
+      'options'  => params[:options] || 'MinSize',
     }
+    
+    uri = URI.parse(result(:speak, params).body[:speak_response][:speak_result])
 
-    result = result(@speak_uri, params, { "Content-Type" => params[:format].to_s })
+    http = Net::HTTP.new(uri.host, uri.port)
+    if uri.scheme == "https"
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+    end
+    results = http.get(uri, {'Authorization' => "Bearer #{get_access_token['access_token']}"})
 
-    result.body
+    if results.response.code.to_i == 200
+      results.body
+    else
+      html = Nokogiri::HTML(results.body)
+      raise Exception, html.xpath("//text()").remove.map(&:to_s).join(' ')
+    end
   end
 
   def supported_language_codes
-    result = result @list_codes_uri
-    Nokogiri.parse(result.body).xpath("//xmlns:string").map(&:content)
+    result(:get_languages_for_translate).body[:get_languages_for_translate_response][:get_languages_for_translate_result][:string]
   end
 
 
@@ -109,26 +113,35 @@ private
     params.map { |key, value| "#{key}=#{value}" }.join '&'
   end
 
-  def result(uri, params={}, headers={})
-    get_access_token
-    http = Net::HTTP.new(uri.host, uri.port)
-    if uri.scheme == "https"
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+  # Public: performs actual request to Bing Translator SOAP API
+  def result(action, params={})
+    # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
+    params = Hash[params.map{|k,v| ["v2:#{k}", v]}]
+    begin
+      soap_client.call(action, message: params)
+    rescue AuthenticationException
+      raise
+    rescue StandardError => e
+      # Keep old behaviour: raise only internal Exception class
+      raise Exception, e.message
     end
+  end
 
-    results = http.get(
-      "#{uri.path}?#{prepare_param_string(params)}",
-      {
-        'Authorization' => "Bearer #{@access_token['access_token']}"
-      })
-
-    if results.response.code.to_i == 200
-      results
-    else
-      html = Nokogiri::HTML(results.body)
-      raise Exception, html.xpath("//text()").remove.map(&:to_s).join(' ')
-    end
+  # Private: Constructs SOAP client
+  #
+  # Construct and store new client when called first time.
+  # Return stored client while access token is fresh.
+  # Construct and store new client when token have been expired.
+  def soap_client
+    return @client if @client and @access_token and
+      Time.now < @access_token['expires_at']
+    
+    @client = Savon.client(
+      wsdl: WSDL_URI,
+      namespace: NAMESPACE_URI,
+      namespace_identifier: :v2,
+      headers: {'Authorization' => "Bearer #{get_access_token['access_token']}"},
+    )
   end
 
   # Private: Get a new access token

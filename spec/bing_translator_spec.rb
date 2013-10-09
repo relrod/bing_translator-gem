@@ -1,9 +1,30 @@
 # encoding: utf-8
 
+require 'rspec-html-matchers'
+
 require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
+
+# Log all the tasks output, keeping RSpec interface clean while running
+RSpec.configure do |config|
+  original_stderr = $stderr
+  original_stdout = $stdout
+  config.before(:all) do 
+    # Redirect stderr and stdout
+    $stderr = File.new(File.join(File.dirname(__FILE__), 'stderr.log'), 'w')
+    $stdout = File.new(File.join(File.dirname(__FILE__), 'stdout.log'), 'w')
+  end
+  config.after(:all) do
+    # Return stderr and stdout back in to the place
+    $stderr = original_stderr
+    $stdout = original_stdout
+  end
+end
 
 describe BingTranslator do
   let(:message_en) { "This message should be translated" }
+  let(:long_text) { File.read(File.join(File.dirname(__FILE__), 'long_text')) }
+  let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
+  let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
   let(:translator) {
     BingTranslator.new(ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
       ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
@@ -20,6 +41,21 @@ describe BingTranslator do
 
     result = translator.translate message_en, :from => :en, :to => :de
     result.should == "Diese Meldung sollte übersetzt werden"
+  end
+
+  it "translates long texts (up to allowed limit)" do
+    result = translator.translate long_text, :from => :en, :to => :ru
+    result.size.should > 1000
+
+    result = translator.translate long_unicode_text, :from => :ru, :to => :en
+    result.size.should > 5000 # I assume that the translation couldn't be two times smaller, than the original
+  end
+
+  it "translates texts in html" do
+    result = translator.translate long_html_text, :from => :en, :to => :ru, :content_type => 'text/html'
+    result.size.should > 1000
+    result.to_s.should have_tag('p')
+    result.to_s.should have_tag('code')
   end
 
   it "translates text with language autodetection" do
@@ -61,7 +97,7 @@ describe BingTranslator do
     result.length.should > 1000
   end
 
-  it "throws a reasonable error when the Bing translate API doesn't give 200" do
+  it "throws a reasonable error when the Bing translate API returns an error" do
     expect { translator.translate 'hola', :from => :invlaid, :to => :en }.to raise_error(BingTranslator::Exception)
   end
 
