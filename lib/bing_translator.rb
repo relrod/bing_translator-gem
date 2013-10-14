@@ -41,7 +41,7 @@ class BingTranslator
       'category'    => 'general',
       'contentType' => params[:content_type] || 'text/plain'
     }
-    
+
     result(:translate, params).body[:translate_response][:translate_result]
   end
 
@@ -66,7 +66,7 @@ class BingTranslator
       'format'   => params[:format] || 'audio/wav',
       'options'  => params[:options] || 'MinSize',
     }
-    
+
     uri = URI.parse(result(:speak, params).body[:speak_response][:speak_result])
 
     http = Net::HTTP.new(uri.host, uri.port)
@@ -135,7 +135,7 @@ private
   def soap_client
     return @client if @client and @access_token and
       Time.now < @access_token['expires_at']
-    
+
     @client = Savon.client(
       wsdl: WSDL_URI,
       namespace: NAMESPACE_URI,

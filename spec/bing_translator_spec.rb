@@ -8,7 +8,7 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 RSpec.configure do |config|
   original_stderr = $stderr
   original_stdout = $stdout
-  config.before(:all) do 
+  config.before(:all) do
     # Redirect stderr and stdout
     $stderr = File.new(File.join(File.dirname(__FILE__), 'stderr.log'), 'w')
     $stdout = File.new(File.join(File.dirname(__FILE__), 'stdout.log'), 'w')
