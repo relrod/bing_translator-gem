@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'bing_translator'
-  s.version     = '4.1.1'
-  s.date        = '2013-08-18'
+  s.version     = '4.2.0'
+  s.date        = '2013-10-14'
   s.homepage    = 'https://www.github.com/CodeBlock/bing_translator-gem'
   s.summary     = "Translate using the Bing HTTP API"
   s.description = "Translate strings using the Bing HTTP API. Requires that you have a Client ID and Secret. See README.md for information."
