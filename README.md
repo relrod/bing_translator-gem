@@ -1,6 +1,8 @@
 Bing Translator
 ===============
 
+[![Build Status](https://travis-ci.org/CodeBlock/bing_translator-gem.png)](https://travis-ci.org/CodeBlock/bing_translator-gem)
+
 This gem wraps the Microsoft Bing SOAP Translate API.
 I am in no way affiliated with Microsoft or Bing.
 Use this gem at your own risk.
