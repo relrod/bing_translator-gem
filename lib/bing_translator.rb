@@ -74,7 +74,7 @@ class BingTranslator
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
     end
-    results = http.get(uri, {'Authorization' => "Bearer #{get_access_token['access_token']}"})
+    results = http.get(uri.to_s, {'Authorization' => "Bearer #{get_access_token['access_token']}"})
 
     if results.response.code.to_i == 200
       results.body
