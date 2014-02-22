@@ -88,6 +88,13 @@ class BingTranslator
     result(:get_languages_for_translate).body[:get_languages_for_translate_response][:get_languages_for_translate_result][:string]
   end
 
+  def language_names(codes, locale = 'en')
+    response = result(:get_language_names, locale: locale, languageCodes: {'a:string' => codes}) do
+      attributes 'xmlns:a' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
+    end
+
+    response.body[:get_language_names_response][:get_language_names_result][:string]
+  end
 
   def balance
     datasets["d"]["results"].each do |result|
@@ -114,11 +121,11 @@ private
   end
 
   # Public: performs actual request to Bing Translator SOAP API
-  def result(action, params={})
+  def result(action, params = {}, &block)
     # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
     params = Hash[params.map{|k,v| ["v2:#{k}", v]}]
     begin
-      soap_client.call(action, message: params)
+      soap_client.call(action, message: params, &block)
     rescue AuthenticationException
       raise
     rescue StandardError => e
