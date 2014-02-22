@@ -51,7 +51,7 @@ class BingTranslator
       'language' => '',
     }
 
-    result = result(:detect, params).body[:detect_response][:detect_result].to_sym
+    result(:detect, params).body[:detect_response][:detect_result].to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
