@@ -106,6 +106,11 @@ describe BingTranslator do
     result.include?('en').should == true
   end
 
+  it "is able to get language names from language codes" do
+    translator.language_names(['en', 'es', 'de']).should == ['English', 'Spanish', 'German']
+    translator.language_names(['en', 'es', 'de'], 'de').should == ['Englisch', 'Spanisch', 'Deutsch']
+  end
+
   it "throws a BingTranslatorAuthenticationException exception on invalid credentials" do
     translator = BingTranslator.new("", "")
     expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslator::AuthenticationException)
