@@ -22,6 +22,7 @@ end
 
 describe BingTranslator do
   let(:message_en) { "This message should be translated" }
+  let(:message_en_newlines) { "This message should be translated\nIt contains several new lines\nHello!" }
   let(:long_text) { File.read(File.join(File.dirname(__FILE__), 'long_text')) }
   let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
   let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
@@ -49,6 +50,13 @@ describe BingTranslator do
 
     result = translator.translate long_unicode_text, :from => :ru, :to => :en
     result.size.should > 5000 # I assume that the translation couldn't be two times smaller, than the original
+  end
+
+  it "retains newlines if told to" do
+    result = translator.translate message_en_newlines, :from => :en, :to => :es, :keep_newlines => true
+    result.size.should < 100
+    result.size.should > 60
+    result.should == "Este mensaje debe ser traducido\nContiene varias nuevas líneas\n¡ Hola!"
   end
 
   it "translates texts in html" do
