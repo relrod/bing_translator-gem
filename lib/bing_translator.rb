@@ -32,14 +32,7 @@ class BingTranslator
 
   def translate(text, params = {})
     raise "Must provide :to." if params[:to].nil?
-    if params[:keep_newlines]
-      text.split("\n").map { |x| do_translate(x, params) }.join("\n")
-    else
-      do_translate(text, params)
-    end
-  end
 
-  def do_translate(text, params = {})
     # Important notice: param order makes sense in SOAP. Do not reorder or delete!
     params = {
       'text'        => text.to_s,
