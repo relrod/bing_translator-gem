@@ -5,7 +5,9 @@ env:
   - secure: TUahrpZEN4rTUVodjDP3VmAA6rPpnrmSkZekR1BX/OFB26+V1xWOM0LJ6VHEv2rjdlJoHerWAPcWeozGKx/3vzypfB2ObybyVzLP5QSviDF9U6wsCkUbbh7nO5dKPOIEtdFeoBiMJCPNso8YmJU0jxBNJfeyysIJivDXkX3SOlo=
   - secure: EuWLlgAHRzSYSURTI4SPVksTB02hPR4gCUoNM9kLHtHmMZ75mnX0jWksi6MVFH1WhPOQIeMkVZjkjDj4dg9QVPx+1fKpf10X+XyZY/x7VVVvjZtyFBl6yw/dwujEWnOmPEPqIhVSK0V2s8ru+tmorqFmzKCsOqEG+R39A/pZLQ4=
 rvm:
-  - 2.1.1
+  - 2.1.2
   - 2.0.0
   - 1.9.3
   - jruby-19mode
+  - jruby-head
+  - ruby-head
