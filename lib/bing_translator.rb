@@ -102,6 +102,14 @@ class BingTranslator
     end
   end
 
+  # use case is to allow placement of the token as a JSON
+  # on an HTML page for JavaScript with .to_json
+  #
+  # @return {hash}
+  def get_bing_access_token
+    return get_access_token()
+  end
+
 private
   def datasets
     raise AuthenticationException, "Must provide account key" if @account_key.nil?
