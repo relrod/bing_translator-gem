@@ -81,4 +81,19 @@ open('file.mp3', 'wb') { |f| f.write audio }
 # Account balance
 translator.balance # => 20000
 
+# get_bing_access_token
+# helper example
+def get_access_token
+	begin
+		translator = BingTranslator.new('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET', false, 'AZURE_ACCOUNT_KEY')
+		token = translator.get_access_token
+		token[:status] = 'success'
+	rescue Exception => exception
+		YourApp.error_logger.error("Bing Translator: \"#{exception.message}\"")
+		token = { :status => exception.message }
+	end
+
+	return token
+end
+
 ```

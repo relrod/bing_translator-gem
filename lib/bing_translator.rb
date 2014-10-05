@@ -102,6 +102,37 @@ class BingTranslator
     end
   end
 
+  # Get a new access token and set it internally as @access_token
+  #
+  # Microsoft changed up how you get access to the Translate API.
+  # This gets a new token if it's required. We call this internally
+  # before any request we make to the Translate API.
+  #
+  # @return {hash}
+  # Returns existing @access_token if we don't need a new token yet,
+  # or returns the one just obtained.
+  def get_access_token
+    return @access_token if @access_token and
+      Time.now < @access_token['expires_at']
+
+    params = {
+      'client_id' => CGI.escape(@client_id),
+      'client_secret' => CGI.escape(@client_secret),
+      'scope' => CGI.escape('http://api.microsofttranslator.com'),
+      'grant_type' => 'client_credentials'
+    }
+
+    http = Net::HTTP.new(@access_token_uri.host, @access_token_uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+
+    response = http.post(@access_token_uri.path, prepare_param_string(params))
+    @access_token = JSON.parse(response.body)
+    raise AuthenticationException, @access_token['error'] if @access_token["error"]
+    @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
+    @access_token
+  end
+
 private
   def datasets
     raise AuthenticationException, "Must provide account key" if @account_key.nil?
@@ -149,36 +180,5 @@ private
       namespace_identifier: :v2,
       headers: {'Authorization' => "Bearer #{get_access_token['access_token']}"},
     )
-  end
-
-  # Private: Get a new access token
-  #
-  # Microsoft changed up how you get access to the Translate API.
-  # This gets a new token if it's required. We call this internally
-  # before any request we make to the Translate API.
-  #
-  # Returns nothing if we don't need a new token yet, or
-  #   a Hash of information relating to the token if we obtained a new one.
-  #   Also sets @access_token internally.
-  def get_access_token
-    return @access_token if @access_token and
-      Time.now < @access_token['expires_at']
-
-    params = {
-      'client_id' => CGI.escape(@client_id),
-      'client_secret' => CGI.escape(@client_secret),
-      'scope' => CGI.escape('http://api.microsofttranslator.com'),
-      'grant_type' => 'client_credentials'
-    }
-
-    http = Net::HTTP.new(@access_token_uri.host, @access_token_uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
-
-    response = http.post(@access_token_uri.path, prepare_param_string(params))
-    @access_token = JSON.parse(response.body)
-    raise AuthenticationException, @access_token['error'] if @access_token["error"]
-    @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
-    @access_token
   end
 end
