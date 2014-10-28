@@ -1,7 +1,7 @@
 Bing Translator
 ===============
 
-[![Build Status](https://travis-ci.org/relrod/bing_translator-gem.svg?branch=master)](https://travis-ci.org/relrod/bing_translator-gem)
+[![Gem](https://img.shields.io/gem/v/bing_translator.svg)](https://rubygems.org/gems/bing_translator/) [![Build Status](https://travis-ci.org/relrod/bing_translator-gem.svg?branch=master)](https://travis-ci.org/relrod/bing_translator-gem)
 
 This gem wraps the Microsoft Bing SOAP Translate API.
 I am in no way affiliated with Microsoft or Bing.
