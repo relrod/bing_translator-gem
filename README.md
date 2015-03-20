@@ -75,7 +75,7 @@ locale = translator.detect('Hello. This will be translated!') # => :en
 # The speak method calls a text-to-speech interface in the supplied language.
 # It does not translate the text. Format can be 'audio/mp3' or 'audio/wav'
 
-audio = translator.speak 'Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality'
+audio = translator.speak('Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality')
 open('file.mp3', 'wb') { |f| f.write audio }
 
 # Account balance
