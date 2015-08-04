@@ -45,6 +45,21 @@ class BingTranslator
     result(:translate, params)
   end
 
+  def translate_array(texts, params = {})
+    raise "Must provide :to." if params[:to].nil?
+
+    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
+    params = {
+      'texts'       => { 'arr:string' => texts },
+      'from'        => params[:from].to_s,
+      'to'          => params[:to].to_s,
+      'category'    => 'general',
+      'contentType' => params[:content_type] || 'text/plain'
+    }
+
+    result(:translate_array, params)[:translate_array_response].map{|r| r[:translated_text]}
+  end
+
   def detect(text)
     params = {
       'text'     => text.to_s,
@@ -178,6 +193,9 @@ private
       wsdl: WSDL_URI,
       namespace: NAMESPACE_URI,
       namespace_identifier: :v2,
+      namespaces: {
+        'xmlns:arr' =>  'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
+      },
       headers: {'Authorization' => "Bearer #{get_access_token['access_token']}"},
     )
   end
