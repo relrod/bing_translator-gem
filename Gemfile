@@ -1,9 +1,13 @@
 source 'https://rubygems.org'
 
-gem "rspec", "~> 2.13.0"
-gem "rspec-html-matchers"
-gem "nokogiri", "~> 1.6.0"
-gem "json", "~> 1.8.0"
-gem "fuubar"
-gem "savon", "~> 2.0"
-gem "rake"
+gem 'rake', '~> 10.0'
+
+group :test do
+  gem 'rspec', '~> 2.13.0'
+  gem 'rspec-html-matchers'
+  gem 'fuubar'
+  gem 'dotenv'
+end
+
+# Specify your gem's dependencies in bing_translator.gemspec
+gemspec
