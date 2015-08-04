@@ -42,7 +42,7 @@ class BingTranslator
       'contentType' => params[:content_type] || 'text/plain'
     }
 
-    result(:translate, params).body[:translate_response][:translate_result]
+    result(:translate, params)
   end
 
   def detect(text)
@@ -51,7 +51,7 @@ class BingTranslator
       'language' => '',
     }
 
-    result(:detect, params).body[:detect_response][:detect_result].to_sym
+    result(:detect, params).to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
@@ -67,7 +67,7 @@ class BingTranslator
       'options'  => params[:options] || 'MinSize',
     }
 
-    uri = URI.parse(result(:speak, params).body[:speak_response][:speak_result])
+    uri = URI.parse(result(:speak, params))
 
     http = Net::HTTP.new(uri.host, uri.port)
     if uri.scheme == "https"
@@ -85,7 +85,7 @@ class BingTranslator
   end
 
   def supported_language_codes
-    result(:get_languages_for_translate).body[:get_languages_for_translate_response][:get_languages_for_translate_result][:string]
+    result(:get_languages_for_translate)[:string]
   end
 
   def language_names(codes, locale = 'en')
@@ -93,7 +93,7 @@ class BingTranslator
       attributes 'xmlns:a' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
     end
 
-    response.body[:get_language_names_response][:get_language_names_result][:string]
+    response[:string]
   end
 
   def balance
@@ -156,7 +156,7 @@ private
     # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
     params = Hash[params.map{|k,v| ["v2:#{k}", v]}]
     begin
-      soap_client.call(action, message: params, &block)
+      soap_client.call(action, message: params, &block).body[:"#{action}_response"][:"#{action}_result"]
     rescue AuthenticationException
       raise
     rescue StandardError => e
