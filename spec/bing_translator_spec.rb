@@ -34,7 +34,7 @@ describe BingTranslator do
 
   it "translates text" do
     result = translator.translate message_en, :from => :en, :to => :ru
-    result.should == "Это сообщение должно быть переведены"
+    result.should == "Это сообщение должно быть переведено"
 
     result = translator.translate message_en, :from => :en, :to => :fr
     result.should == "Ce message devrait être traduit"
@@ -60,7 +60,7 @@ describe BingTranslator do
 
   it "translates text with language autodetection" do
     result = translator.translate message_en, :to => :ru
-    result.should == "Это сообщение должно быть переведены"
+    result.should == "Это сообщение должно быть переведено"
 
     result = translator.translate "Ce message devrait être traduit", :to => :en
     result.should == message_en
