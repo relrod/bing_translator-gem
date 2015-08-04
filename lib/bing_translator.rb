@@ -57,7 +57,7 @@ class BingTranslator
       'contentType' => params[:content_type] || 'text/plain'
     }
 
-    result(:translate_array, params)[:translate_array_response].map{|r| r[:translated_text]}
+    array_wrap(result(:translate_array, params)[:translate_array_response]).map{|r| r[:translated_text]}
   end
 
   def detect(text)
@@ -198,5 +198,16 @@ private
       },
       headers: {'Authorization' => "Bearer #{get_access_token['access_token']}"},
     )
+  end
+
+  # Private: Array#wrap based on ActiveSupport extension
+  def array_wrap(object)
+    if object.nil?
+      []
+    elsif object.respond_to?(:to_ary)
+      object.to_ary || [object]
+    else
+      [object]
+    end
   end
 end
