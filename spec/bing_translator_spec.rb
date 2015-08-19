@@ -22,6 +22,7 @@ end
 
 describe BingTranslator do
   let(:message_en) { "This message should be translated" }
+  let(:message_en_other) { "This message should be too translated" }
   let(:long_text) { File.read(File.join(File.dirname(__FILE__), 'long_text')) }
   let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
   let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
@@ -34,7 +35,7 @@ describe BingTranslator do
 
   it "translates text" do
     result = translator.translate message_en, :from => :en, :to => :ru
-    result.should == "Это сообщение должно быть переведены"
+    result.should == "Это сообщение должно быть переведено"
 
     result = translator.translate message_en, :from => :en, :to => :fr
     result.should == "Ce message devrait être traduit"
@@ -60,13 +61,18 @@ describe BingTranslator do
 
   it "translates text with language autodetection" do
     result = translator.translate message_en, :to => :ru
-    result.should == "Это сообщение должно быть переведены"
+    result.should == "Это сообщение должно быть переведено"
 
     result = translator.translate "Ce message devrait être traduit", :to => :en
     result.should == message_en
 
     result = translator.translate "Diese Meldung sollte übersetzt werden", :to => :en
     result.should == message_en
+  end
+
+  it "translates array of texts" do
+    result = translator.translate_array [message_en, message_en_other], :from => :en, :to => :fr
+    result.should == ["Ce message devrait être traduit", "Ce message devrait être aussi traduit"]
   end
 
   it "detects language by passed text" do
