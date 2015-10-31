@@ -75,6 +75,14 @@ describe BingTranslator do
     result.should == ["Ce message devrait être traduit", "Ce message devrait être aussi traduit"]
   end
 
+  it "translates array of texts, with word alignment information" do
+    result = translator.translate_array2 [message_en, message_en_other], :from => :en, :to => :de
+    result.should == [["Diese Meldung sollte übersetzt werden", 
+                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-31:36 23:32-21:29"], 
+                      ["Diese Meldung sollte auch übersetzt werden", 
+                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-36:41 23:25-21:24 27:36-26:34"]]
+  end
+
   it "detects language by passed text" do
     result = translator.detect message_en
     result.should == :en
