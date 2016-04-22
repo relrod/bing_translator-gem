@@ -12,6 +12,9 @@ rvm:
   - jruby-19mode
   - jruby-head
   - ruby-head
+matrix:
+  allow_failures:
+    - rvm: jruby-head
 before_install:
   - gem update --system
   - gem update bundler
