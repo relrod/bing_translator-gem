@@ -125,9 +125,20 @@ describe BingTranslator do
     translator.language_names(['en', 'es', 'de'], 'de').should == ['Englisch', 'Spanisch', 'Deutsch']
   end
 
-  it "throws a BingTranslatorAuthenticationException exception on invalid credentials" do
-    translator = BingTranslator.new("", "")
-    expect { translator.translate 'hola', :from => :es, :to => :en }.to raise_error(BingTranslator::AuthenticationException)
+  context 'when credentials are invalid' do
+    let(:translator) { BingTranslator.new("", "") }
+
+    subject { translator.translate 'hola', :from => :es, :to => :en }
+
+    it "throws a BingTranslator::AuthenticationException exception" do
+      expect { subject }.to raise_error(BingTranslator::AuthenticationException)
+    end
+
+    context "trying to translate something twice" do
+      it "throws the BingTranslator::AuthenticationException exception every time" do
+        2.times { expect { subject }.to raise_error(BingTranslator::AuthenticationException) }
+      end
+    end
   end
 
   describe "#balance" do
