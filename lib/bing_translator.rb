@@ -143,7 +143,7 @@ class BingTranslator
   # Returns existing @access_token if we don't need a new token yet,
   # or returns the one just obtained.
   def get_access_token
-    return @access_token if @access_token and
+    return @access_token if @access_token and @access_token['expires_at'] and
       Time.now < @access_token['expires_at']
 
     params = {
