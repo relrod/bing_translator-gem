@@ -202,7 +202,7 @@ private
   # Return stored client while access token is fresh.
   # Construct and store new client when token have been expired.
   def soap_client
-    return @client if @client and @access_token and
+    return @client if @client and @access_token and @access_token['expires_at'] and
       Time.now < @access_token['expires_at']
 
     @client = Savon.client(
