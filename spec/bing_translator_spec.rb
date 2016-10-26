@@ -4,22 +4,6 @@ require 'rspec-html-matchers'
 
 require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 
-# Log all the tasks output, keeping RSpec interface clean while running
-RSpec.configure do |config|
-  original_stderr = $stderr
-  original_stdout = $stdout
-  config.before(:all) do
-    # Redirect stderr and stdout
-    $stderr = File.new(File.join(File.dirname(__FILE__), 'stderr.log'), 'w')
-    $stdout = File.new(File.join(File.dirname(__FILE__), 'stdout.log'), 'w')
-  end
-  config.after(:all) do
-    # Return stderr and stdout back in to the place
-    $stderr = original_stderr
-    $stdout = original_stdout
-  end
-end
-
 describe BingTranslator do
   let(:message_en) { "This message should be translated" }
   let(:message_en_other) { "This message should be too translated" }
