@@ -27,10 +27,11 @@ describe BingTranslator do
   let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
   let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
   let(:translator) {
-    BingTranslator.new(ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
-      ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
-      false,
-      ENV['AZURE_TEST_ACCOUNT_KEY'])
+    BingTranslator.new(client_id: ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
+      client_secret: ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
+      skip_ssl_verify: false,
+      account_key: ENV['AZURE_TEST_ACCOUNT_KEY'],
+      subscription_key: ENV['COGNITIVE_SUBSCRIPTION_KEY'])
   }
 
   it "translates text" do
@@ -77,9 +78,9 @@ describe BingTranslator do
 
   it "translates array of texts, with word alignment information" do
     result = translator.translate_array2 [message_en, message_en_other], :from => :en, :to => :de
-    result.should == [["Diese Meldung sollte übersetzt werden", 
-                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-31:36 23:32-21:29"], 
-                      ["Diese Meldung sollte auch übersetzt werden", 
+    result.should == [["Diese Meldung sollte übersetzt werden",
+                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-31:36 23:32-21:29"],
+                      ["Diese Meldung sollte auch übersetzt werden",
                        "0:3-0:4 5:11-6:12 13:18-14:19 20:21-36:41 23:25-21:24 27:36-26:34"]]
   end
 
@@ -126,7 +127,7 @@ describe BingTranslator do
   end
 
   context 'when credentials are invalid' do
-    let(:translator) { BingTranslator.new("", "") }
+    let(:translator) { BingTranslator.new(client_id: "", client_secret: "") }
 
     subject { translator.translate 'hola', :from => :es, :to => :en }
 
@@ -151,7 +152,7 @@ describe BingTranslator do
     end
 
     context "when azure account has been defined" do
-      let(:translator) { BingTranslator.new("", "") }
+      let(:translator) { BingTranslator.new(client_id: "", client_secret: "") }
 
       it "raises an exception" do
         expect { translator.balance }.to raise_error
