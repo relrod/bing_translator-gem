@@ -74,7 +74,9 @@ class BingTranslator
       'language' => '',
     }
 
-    result(:detect, params).to_sym
+    if lang = result(:detect, params)
+      lang.to_sym
+    end
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'

@@ -69,6 +69,9 @@ describe BingTranslator do
     result = translator.detect message_en
     result.should == :en
 
+    result = translator.detect ' '
+    result.should == nil
+
     result = translator.detect "Это сообщение должно быть переведено"
     result.should == :ru
 
