@@ -11,11 +11,8 @@ describe BingTranslator do
   let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
   let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
   let(:translator) {
-    BingTranslator.new(client_id: ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
-      client_secret: ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
-      skip_ssl_verify: false,
-      account_key: ENV['AZURE_TEST_ACCOUNT_KEY'],
-      subscription_key: ENV['COGNITIVE_SUBSCRIPTION_KEY'])
+    BingTranslator.new(ENV['COGNITIVE_SUBSCRIPTION_KEY'],
+      skip_ssl_verify: false)
   }
 
   it "translates text" do
@@ -111,35 +108,17 @@ describe BingTranslator do
   end
 
   context 'when credentials are invalid' do
-    let(:translator) { BingTranslator.new(client_id: "", client_secret: "") }
+    let(:translator) { BingTranslator.new("") }
 
     subject { translator.translate 'hola', :from => :es, :to => :en }
 
-    it "throws a BingTranslator::AuthenticationException exception" do
-      expect { subject }.to raise_error(BingTranslator::AuthenticationException)
+    it "throws a BingTranslator::Exception exception" do
+      expect { subject }.to raise_error(BingTranslator::Exception)
     end
 
     context "trying to translate something twice" do
-      it "throws the BingTranslator::AuthenticationException exception every time" do
-        2.times { expect { subject }.to raise_error(BingTranslator::AuthenticationException) }
-      end
-    end
-  end
-
-  describe "#balance" do
-    context "when azure account key has been defined" do
-      it "returns the balance" do
-        balance = translator.balance
-
-        balance.should be_a Fixnum
-      end
-    end
-
-    context "when azure account has been defined" do
-      let(:translator) { BingTranslator.new(client_id: "", client_secret: "") }
-
-      it "raises an exception" do
-        expect { translator.balance }.to raise_error
+      it "throws the BingTranslator::Exception exception every time" do
+        2.times { expect { subject }.to raise_error(BingTranslator::Exception) }
       end
     end
   end
