@@ -14,20 +14,13 @@ require 'savon'
 class BingTranslator
   WSDL_URI = 'http://api.microsofttranslator.com/V2/soap.svc?wsdl'
   NAMESPACE_URI = 'http://api.microsofttranslator.com/V2'
-  ACCESS_TOKEN_URI = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
-  DATASETS_URI = "https://api.datamarket.azure.com/Services/My/Datasets?$format=json"
+  COGNITIVE_ACCESS_TOKEN_URI = URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
 
   class Exception < StandardError; end
-  class AuthenticationException < StandardError; end
 
-  def initialize(client_id, client_secret, skip_ssl_verify = false, account_key = nil)
-    @client_id = client_id
-    @client_secret = client_secret
-    @account_key = account_key
-    @skip_ssl_verify = skip_ssl_verify
-
-    @access_token_uri = URI.parse ACCESS_TOKEN_URI
-    @datasets_uri = URI.parse DATASETS_URI
+  def initialize(subscription_key, options = {})
+    @skip_ssl_verify = options.fetch(:skip_ssl_verify, false)
+    @subscription_key = subscription_key
   end
 
   def translate(text, params = {})
@@ -75,14 +68,15 @@ class BingTranslator
     array_wrap(result(:translate_array2, params)[:translate_array2_response]).map{|r| [r[:translated_text], r[:alignment]]}
   end
 
-
   def detect(text)
     params = {
       'text'     => text.to_s,
       'language' => '',
     }
 
-    result(:detect, params).to_sym
+    if lang = result(:detect, params)
+      lang.to_sym
+    end
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
@@ -127,73 +121,42 @@ class BingTranslator
     response[:string]
   end
 
-  def balance
-    datasets["d"]["results"].each do |result|
-      return result["ResourceBalance"] if result["ProviderName"] == "Microsoft Translator"
-    end
-  end
+  private
 
   # Get a new access token and set it internally as @access_token
-  #
-  # Microsoft changed up how you get access to the Translate API.
-  # This gets a new token if it's required. We call this internally
-  # before any request we make to the Translate API.
   #
   # @return {hash}
   # Returns existing @access_token if we don't need a new token yet,
   # or returns the one just obtained.
   def get_access_token
-    return @access_token if @access_token and @access_token['expires_at'] and
-      Time.now < @access_token['expires_at']
-
-    params = {
-      'client_id' => CGI.escape(@client_id),
-      'client_secret' => CGI.escape(@client_secret),
-      'scope' => CGI.escape('http://api.microsofttranslator.com'),
-      'grant_type' => 'client_credentials'
+    headers = {
+      'Ocp-Apim-Subscription-Key' => @subscription_key
     }
 
-    http = Net::HTTP.new(@access_token_uri.host, @access_token_uri.port)
+    http = Net::HTTP.new(COGNITIVE_ACCESS_TOKEN_URI.host, COGNITIVE_ACCESS_TOKEN_URI.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
 
-    response = http.post(@access_token_uri.path, prepare_param_string(params))
-    @access_token = JSON.parse(response.body)
-    raise AuthenticationException, @access_token['error'] if @access_token["error"]
-    @access_token['expires_at'] = Time.now + @access_token['expires_in'].to_i
-    @access_token
+    response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, "", headers)
+
+    @access_token = {
+      'access_token' => response.body,
+      'expires_at' => Time.now + 480
+    }
   end
 
-private
-  def datasets
-    raise AuthenticationException, "Must provide account key" if @account_key.nil?
-
-    http = Net::HTTP.new(@datasets_uri.host, @datasets_uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    request = Net::HTTP::Get.new(@datasets_uri.request_uri)
-    request.basic_auth("", @account_key)
-    response = http.request(request)
-
-    JSON.parse response.body
+  # Performs actual request to Bing Translator SOAP API
+  def result(action, params = {}, &block)    
+    soap_client.call(action, message: build_soap_message(params), &block).body[:"#{action}_response"][:"#{action}_result"]
+  rescue Savon::SOAPFault => e
+    raise Exception, e.message
   end
 
-  def prepare_param_string(params)
-    params.map { |key, value| "#{key}=#{value}" }.join '&'
-  end
-
-  # Public: performs actual request to Bing Translator SOAP API
-  def result(action, params = {}, &block)
-    # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
-    params = Hash[params.map{|k,v| ["v2:#{k}", v]}]
-    begin
-      soap_client.call(action, message: params, &block).body[:"#{action}_response"][:"#{action}_result"]
-    rescue AuthenticationException
-      raise
-    rescue StandardError => e
-      # Keep old behaviour: raise only internal Exception class
-      raise Exception, e.message
-    end
+  # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
+  #
+  # @return [Hash]
+  def build_soap_message(params)    
+    Hash[params.map{|k,v| ["v2:#{k}", v]}]
   end
 
   # Private: Constructs SOAP client

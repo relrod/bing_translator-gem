@@ -4,22 +4,6 @@ require 'rspec-html-matchers'
 
 require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 
-# Log all the tasks output, keeping RSpec interface clean while running
-RSpec.configure do |config|
-  original_stderr = $stderr
-  original_stdout = $stdout
-  config.before(:all) do
-    # Redirect stderr and stdout
-    $stderr = File.new(File.join(File.dirname(__FILE__), 'stderr.log'), 'w')
-    $stdout = File.new(File.join(File.dirname(__FILE__), 'stdout.log'), 'w')
-  end
-  config.after(:all) do
-    # Return stderr and stdout back in to the place
-    $stderr = original_stderr
-    $stdout = original_stdout
-  end
-end
-
 describe BingTranslator do
   let(:message_en) { "This message should be translated" }
   let(:message_en_other) { "This message should be too translated" }
@@ -27,10 +11,8 @@ describe BingTranslator do
   let(:long_unicode_text) { File.read(File.join(File.dirname(__FILE__), 'long_unicode_text.txt')) }
   let(:long_html_text) { File.read(File.join(File.dirname(__FILE__), 'long_text.html')) }
   let(:translator) {
-    BingTranslator.new(ENV['BING_TRANSLATOR_TEST_CLIENT_ID'],
-      ENV['BING_TRANSLATOR_TEST_CLIENT_SECRET'],
-      false,
-      ENV['AZURE_TEST_ACCOUNT_KEY'])
+    BingTranslator.new(ENV['COGNITIVE_SUBSCRIPTION_KEY'],
+      skip_ssl_verify: false)
   }
 
   it "translates text" do
@@ -77,15 +59,18 @@ describe BingTranslator do
 
   it "translates array of texts, with word alignment information" do
     result = translator.translate_array2 [message_en, message_en_other], :from => :en, :to => :de
-    result.should == [["Diese Meldung sollte übersetzt werden", 
-                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-31:36 23:32-21:29"], 
-                      ["Diese Meldung sollte auch übersetzt werden", 
+    result.should == [["Diese Meldung sollte übersetzt werden",
+                       "0:3-0:4 5:11-6:12 13:18-14:19 20:21-31:36 23:32-21:29"],
+                      ["Diese Meldung sollte auch übersetzt werden",
                        "0:3-0:4 5:11-6:12 13:18-14:19 20:21-36:41 23:25-21:24 27:36-26:34"]]
   end
 
   it "detects language by passed text" do
     result = translator.detect message_en
     result.should == :en
+
+    result = translator.detect ' '
+    result.should == nil
 
     result = translator.detect "Это сообщение должно быть переведено"
     result.should == :ru
@@ -126,35 +111,17 @@ describe BingTranslator do
   end
 
   context 'when credentials are invalid' do
-    let(:translator) { BingTranslator.new("", "") }
+    let(:translator) { BingTranslator.new("") }
 
     subject { translator.translate 'hola', :from => :es, :to => :en }
 
-    it "throws a BingTranslator::AuthenticationException exception" do
-      expect { subject }.to raise_error(BingTranslator::AuthenticationException)
+    it "throws a BingTranslator::Exception exception" do
+      expect { subject }.to raise_error(BingTranslator::Exception)
     end
 
     context "trying to translate something twice" do
-      it "throws the BingTranslator::AuthenticationException exception every time" do
-        2.times { expect { subject }.to raise_error(BingTranslator::AuthenticationException) }
-      end
-    end
-  end
-
-  describe "#balance" do
-    context "when azure account key has been defined" do
-      it "returns the balance" do
-        balance = translator.balance
-
-        balance.should be_a Fixnum
-      end
-    end
-
-    context "when azure account has been defined" do
-      let(:translator) { BingTranslator.new("", "") }
-
-      it "raises an exception" do
-        expect { translator.balance }.to raise_error
+      it "throws the BingTranslator::Exception exception every time" do
+        2.times { expect { subject }.to raise_error(BingTranslator::Exception) }
       end
     end
   end
