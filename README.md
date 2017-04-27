@@ -35,6 +35,7 @@ To be able to use the API freely, do the following:
 1. Go [here](https://azure.microsoft.com/en-us/free/)
 2. Sign in with valid Live credentials.
 3. Add the resource 'Cognitive Services APIs'
+4. In 'RESOURCE MANAGEMENT > Keys' pick either 'KEY 1' or 'KEY 2'
 
 Usage
 =====
