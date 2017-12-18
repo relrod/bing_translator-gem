@@ -5,6 +5,7 @@ require 'rspec-html-matchers'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'bing_translator')
 
 describe BingTranslator do
+  include RSpecHtmlMatchers
   let(:message_en) { "This message should be translated" }
   let(:message_en_other) { "This message should be too translated" }
   let(:long_text) { File.read(File.join(File.dirname(__FILE__), 'long_text')) }
