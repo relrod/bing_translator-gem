@@ -8,3 +8,4 @@ test.rb
 *.log
 /Gemfile.lock
 .bundle/
+/bin/
