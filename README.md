@@ -14,7 +14,7 @@ To use this rubygem:
 
 With bundler:
 
-    gem "bing_translator", "~> 5.1.0"
+    gem "bing_translator", "~> 5.2.0"
 
 Information
 ===========
