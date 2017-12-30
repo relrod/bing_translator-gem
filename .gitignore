@@ -7,3 +7,4 @@ test.rb
 .rbenv-vars
 *.log
 /Gemfile.lock
+.bundle/
