@@ -12,4 +12,9 @@ Gem::Specification.new do |s|
   s.add_dependency "nokogiri", "~> 1.8.1"
   s.add_dependency "json", "~> 1.8.0"
   s.add_dependency "savon", "~> 2.10.0"
+
+  s.add_development_dependency "rake", "~> 10.0"
+  s.add_development_dependency "rspec", "~> 3.0"
+  s.add_development_dependency "rspec-html-matchers", ">= 0.9.1", "< 0.10.0"
+  s.add_development_dependency "dotenv"
 end
