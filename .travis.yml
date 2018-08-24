@@ -3,13 +3,10 @@ env:
   global:
   - secure: "ULerMTYVWWq35zdVWObKmhJHCtre23CBTDLuB3GPGdxleyoZ2zmCngy08nBvnZoiFLcXaa5AYAGHtv3Wi7GAWfXgirHZzsbwalcA00l8wWgir9dwGh6iscapDKEBSLpgJ3X7py8U6SRo3wCJHNjti/+BiBgfho+ry1M/8atDrxQ="
 rvm:
-  - 2.4.0
-  - 2.3.3
-  - 2.2
-  - 2.1.2
-  - 2.0.0
-  - 1.9.3
-  - jruby-19mode
+  - 2.5.1
+  - 2.4.4
+  - 2.3.6
+  - 2.2.10
   - jruby-head
   - ruby-head
 matrix:
