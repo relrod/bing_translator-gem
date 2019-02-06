@@ -32,41 +32,43 @@ describe BingTranslator do
                        skip_ssl_verify: false)
   end
 
-  it 'translates text' do
-    result = translator.translate message_en, from: :en, to: :ru
-    expect(result).to eq 'Это сообщение должно быть переведено'
+  describe '#translate' do
+    it 'translates text' do
+      result = translator.translate message_en, from: :en, to: :ru
+      expect(result).to eq 'Это сообщение должно быть переведено'
 
-    result = translator.translate message_en, from: :en, to: :fr
-    expect(result).to eq 'Ce message devrait être traduit'
+      result = translator.translate message_en, from: :en, to: :fr
+      expect(result).to eq 'Ce message doit être traduit'
 
-    result = translator.translate message_en, from: :en, to: :de
-    expect(result).to eq 'Diese Meldung sollte übersetzt werden'
-  end
+      result = translator.translate message_en, from: :en, to: :de
+      expect(result).to eq 'Diese Botschaft sollte übersetzt werden'
+    end
 
-  it 'translates long texts (up to allowed limit)' do
-    result = translator.translate long_text, from: :en, to: :ru
-    expect(result.size).to be > 1000
+    it 'translates long texts (up to allowed limit)' do
+      result = translator.translate long_text, from: :en, to: :ru
+      expect(result.size).to be > 1000
 
-    result = translator.translate long_unicode_text, from: :ru, to: :en
-    expect(result.size).to be > 5000 # I assume that the translation couldn't be two times smaller, than the original
-  end
+      result = translator.translate long_unicode_text, from: :ru, to: :en
+      expect(result.size).to be > (long_unicode_text.size / 2) # I assume that the translation couldn't be two times smaller, than the original
+    end
 
-  it 'translates texts in html' do
-    result = translator.translate long_html_text, from: :en, to: :ru, content_type: 'text/html'
-    expect(result.size).to be > 1000
-    expect(result.to_s).to have_tag('p')
-    expect(result.to_s).to have_tag('code')
-  end
+    it 'translates texts in html' do
+      result = translator.translate long_html_text, from: :en, to: :ru, html: true
+      expect(result.size).to be > 1000
+      expect(result.to_s).to have_tag('p')
+      expect(result.to_s).to have_tag('code')
+    end
 
-  it 'translates text with language autodetection' do
-    result = translator.translate message_en, to: :ru
-    expect(result).to eq 'Это сообщение должно быть переведено'
+    it 'translates text with language autodetection' do
+      result = translator.translate message_en, to: :ru
+      expect(result).to eq 'Это сообщение должно быть переведено'
 
-    result = translator.translate 'Ce message devrait être traduit', to: :en
-    expect(result).to eq message_en
+      result = translator.translate 'Ce message devrait être traduit', to: :en
+      expect(result).to eq message_en
 
-    result = translator.translate 'Diese Meldung sollte übersetzt werden', to: :en
-    expect(result).to eq message_en
+      result = translator.translate 'Diese Meldung sollte übersetzt werden', to: :en
+      expect(result).to eq message_en
+    end
   end
 
   it 'translates array of texts' do

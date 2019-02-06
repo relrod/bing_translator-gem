@@ -10,8 +10,7 @@ require 'net/https'
 require 'json'
 
 class BingTranslator
-  WSDL_URI = 'http://api.microsofttranslator.com/V2/soap.svc?wsdl'.freeze
-  NAMESPACE_URI = 'http://api.microsofttranslator.com/V2'.freeze
+  API_HOST = 'https://api.cognitive.microsofttranslator.com'.freeze
   COGNITIVE_ACCESS_TOKEN_URI = URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
 
   class Exception < StandardError; end
@@ -21,19 +20,17 @@ class BingTranslator
     @subscription_key = subscription_key
   end
 
-  def translate(text, params = {})
-    raise 'Must provide :to.' if params[:to].nil?
+  def translate(text, from: nil, to:, html: false)
+    raise 'Must provide :to.' if to.nil?
 
-    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
-    params = {
-      'text'        => text.to_s,
-      'from'        => params[:from].to_s,
-      'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
-    }
+    params = { to: to, textType: html ? 'html' : 'plain' }
+    params[:from] = from if from
+    data = [{ 'Text' => text }].to_json
 
-    result(:translate, params)
+    response_json = api_call('/translate', params, data)
+    translations = Array(response_json.first['translations'])
+    target_translation = translations.find { |result| result['to'] == to.to_s }
+    target_translation['text'] if target_translation
   end
 
   def translate_array(texts, params = {})
@@ -150,24 +147,26 @@ class BingTranslator
     Hash[params.map { |k, v| ["v2:#{k}", v] }]
   end
 
-  # Private: Constructs SOAP client
-  #
-  # Construct and store new client when called first time.
-  # Return stored client while access token is fresh.
-  # Construct and store new client when token have been expired.
-  def soap_client
-    return @client if @client && @access_token && @access_token['expires_at'] &&
-                      (Time.now < @access_token['expires_at'])
+  def api_call(path, params, data)
+    if @access_token.nil? || @access_token['expires_at'].nil? || 
+      Time.now < @access_token['expires_at']
+      get_access_token
+    end
 
-    @client = Savon.client(
-      wsdl: WSDL_URI,
-      namespace: NAMESPACE_URI,
-      namespace_identifier: :v2,
-      namespaces: {
-        'xmlns:arr' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
-      },
-      headers: { 'Authorization' => "Bearer #{get_access_token['access_token']}" }
-    )
+    encoded_params = URI.encode_www_form(params.merge('api-version' => '3.0'))
+    uri = URI.parse("#{API_HOST}#{path}")
+    uri.query = encoded_params
+    headers = {
+      'Content-Type' => 'application/json',
+      'Authorization' => "Bearer #{@access_token['access_token']}"
+    }
+    http = Net::HTTP.new(uri.host, 443)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+    request = Net::HTTP::Post.new(uri.request_uri, headers)
+    request.body = data
+
+    JSON.parse(http.request(request).body)
   end
 
   # Private: Array#wrap based on ActiveSupport extension
