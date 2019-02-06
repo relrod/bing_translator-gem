@@ -133,11 +133,14 @@ class BingTranslator
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
 
     response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
-
-    @access_token = {
-      'access_token' => response.body,
-      'expires_at' => Time.now + 480
-    }
+    if response.code != '200'
+      raise Exception.new('Invalid credentials')
+    else
+      @access_token = {
+        'access_token' => response.body,
+        'expires_at' => Time.now + 480
+      }
+    end
   end
 
   # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
