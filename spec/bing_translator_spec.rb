@@ -84,18 +84,20 @@ describe BingTranslator do
                            '0:3-0:4 5:11-6:12 13:18-14:19 20:21-36:41 23:25-21:24 27:36-26:34']]
   end
 
-  it 'detects language by passed text' do
-    result = translator.detect message_en
-    expect(result).to eq :en
+  describe '#detect' do
+    it 'detects language by passed text' do
+      result = translator.detect message_en
+      expect(result).to eq :en
 
-    result = translator.detect ' '
-    expect(result).to be_nil
+      result = translator.detect ' '
+      expect(result).to eq :en # Apparently that's what is returned by Bing
 
-    result = translator.detect 'Это сообщение должно быть переведено'
-    expect(result).to eq :ru
+      result = translator.detect 'Это сообщение должно быть переведено'
+      expect(result).to eq :ru
 
-    result = translator.detect 'Diese Meldung sollte übersetzt werden'
-    expect(result).to eq :de
+      result = translator.detect 'Diese Meldung sollte übersetzt werden'
+      expect(result).to eq :de
+    end
   end
 
   it 'returns audio data from the text to speech interface' do

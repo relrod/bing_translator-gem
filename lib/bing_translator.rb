@@ -64,14 +64,11 @@ class BingTranslator
    end
 
   def detect(text)
-    params = {
-      'text'     => text.to_s,
-      'language' => ''
-    }
+    data = [{ 'Text' => text }].to_json
 
-    if lang = result(:detect, params)
-      lang.to_sym
-    end
+    response_json = api_call('/detect', {}, data)
+    best_detection = response_json.sort_by { |detection| -detection['score'] }.first
+    best_detection['language'].to_sym
   end
 
   # format:   'audio/wav' [default] or 'audio/mp3'
