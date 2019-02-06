@@ -7,9 +7,7 @@ require 'cgi'
 require 'uri'
 require 'net/http'
 require 'net/https'
-require 'nokogiri'
 require 'json'
-require 'savon'
 
 class BingTranslator
   WSDL_URI = 'http://api.microsofttranslator.com/V2/soap.svc?wsdl'.freeze
@@ -143,13 +141,6 @@ class BingTranslator
       'access_token' => response.body,
       'expires_at' => Time.now + 480
     }
-  end
-
-  # Performs actual request to Bing Translator SOAP API
-  def result(action, params = {}, &block)
-    soap_client.call(action, message: build_soap_message(params), &block).body[:"#{action}_response"][:"#{action}_result"]
-  rescue Savon::SOAPFault => e
-    raise Exception, e.message
   end
 
   # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
