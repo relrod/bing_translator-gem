@@ -143,13 +143,6 @@ class BingTranslator
     end
   end
 
-  # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
-  #
-  # @return [Hash]
-  def build_soap_message(params)
-    Hash[params.map { |k, v| ["v2:#{k}", v] }]
-  end
-
   def api_call(path, params, data)
     if @access_token.nil? || @access_token['expires_at'].nil? || 
       Time.now < @access_token['expires_at']
