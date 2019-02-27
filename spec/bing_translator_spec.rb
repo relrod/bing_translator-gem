@@ -107,6 +107,8 @@ describe BingTranslator do
   it 'is able to list languages that the API supports' do
     result = translator.supported_language_codes
     expect(result).to include('en')
+    expect(result).to include('es')
+    expect(result).to include('de')
   end
 
   it 'is able to get language names from language codes' do

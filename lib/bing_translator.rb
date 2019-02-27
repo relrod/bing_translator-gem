@@ -76,15 +76,16 @@ class BingTranslator
   end
 
   def supported_language_codes
-    result(:get_languages_for_translate)[:string]
+    response_json = get_request('/languages', { scope: 'translation' })
+    response_json['translation'].keys
   end
 
   def language_names(codes, locale = 'en')
-    response = result(:get_language_names, locale: locale, languageCodes: { 'a:string' => codes }) do
-      attributes 'xmlns:a' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
+    response_json = get_request('/languages', { scope: 'translation' }, { 'Accept-Language' => locale})
+    codes.map do |code|
+      response = response_json['translation'][code.to_s]
+      response['name'] unless response.nil?
     end
-
-    response[:string]
   end
 
   private
@@ -112,6 +113,19 @@ class BingTranslator
         'expires_at' => Time.now + 480
       }
     end
+  end
+
+  def get_request(path, params, headers = {})
+    encoded_params = URI.encode_www_form(params.merge('api-version' => '3.0'))
+    uri = URI.parse("#{API_HOST}#{path}")
+    uri.query = encoded_params
+    http = Net::HTTP.new(uri.host, 443)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+    headers = headers.merge('Content-Type' => 'application/json')
+    request = Net::HTTP::Get.new(uri.request_uri, headers)
+
+    JSON.parse(http.request(request).body)
   end
 
   def api_call(path, params, data)
