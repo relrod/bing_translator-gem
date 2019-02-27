@@ -100,23 +100,6 @@ describe BingTranslator do
     end
   end
 
-  it 'returns audio data from the text to speech interface' do
-    result = translator.speak message_en, language: 'en'
-    expect(result.size).to be > 1000
-
-    result = translator.speak 'Это сообщение должно быть переведены', language: 'ru'
-    expect(result.size).to be > 1000
-
-    result = translator.speak 'Ce message devrait être traduit', language: 'fr'
-    expect(result.size).to be > 1000
-
-    result = translator.speak 'Diese Meldung sollte übersetzt werden', language: 'de'
-    expect(result.size).to be > 1000
-
-    result = translator.speak 'Diese Meldung sollte übersetzt werden', language: 'de', format: 'audio/wav', options: 'MaxQuality'
-    expect(result.size).to be > 1000
-  end
-
   it 'throws a reasonable error when the Bing translate API returns an error' do
     expect { translator.translate 'hola', from: :invlaid, to: :en }.to raise_error(BingTranslator::Exception)
   end

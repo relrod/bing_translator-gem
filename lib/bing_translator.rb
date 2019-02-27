@@ -61,7 +61,7 @@ class BingTranslator
     }
 
     array_wrap(result(:translate_array2, params)[:translate_array2_response]).map { |r| [r[:translated_text], r[:alignment]] }
-   end
+  end
 
   def detect(text)
     data = [{ 'Text' => text }].to_json
@@ -71,34 +71,8 @@ class BingTranslator
     best_detection['language'].to_sym
   end
 
-  # format:   'audio/wav' [default] or 'audio/mp3'
-  # language: valid translator language code
-  # options:  'MinSize' [default] or 'MaxQuality'
   def speak(text, params = {})
-    raise 'Must provide :language' if params[:language].nil?
-
-    params = {
-      'text'     => text.to_s,
-      'language' => params[:language].to_s,
-      'format'   => params[:format] || 'audio/wav',
-      'options'  => params[:options] || 'MinSize'
-    }
-
-    uri = URI.parse(result(:speak, params))
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    if uri.scheme == 'https'
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
-    end
-    results = http.get(uri.to_s, 'Authorization' => "Bearer #{get_access_token['access_token']}")
-
-    if results.response.code.to_i == 200
-      results.body
-    else
-      html = Nokogiri::HTML(results.body)
-      raise Exception, html.xpath('//text()').remove.map(&:to_s).join(' ')
-    end
+    raise 'Not supported since 3.0.0'
   end
 
   def supported_language_codes
