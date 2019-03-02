@@ -56,7 +56,8 @@ describe BingTranslator do
 
     context 'when invalid language is specified' do
       it 'throws a reasonable error' do
-        expect { translator.translate 'hola', from: :invlaid, to: :en }.to raise_error(BingTranslator::Exception)
+        expect { translator.translate 'hola', from: :invlaid, to: :en }
+          .to raise_error(BingTranslator::Exception)
       end
     end
   end

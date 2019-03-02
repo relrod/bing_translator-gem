@@ -149,6 +149,9 @@ class BingTranslator
     request = Net::HTTP::Post.new(uri.request_uri, headers)
     request.body = data
 
-    JSON.parse(http.request(request).body)
+    response = http.request(request)
+
+    raise Exception.new("Unsuccessful API call: Code: #{response.code}") unless response.code == '200'
+    JSON.parse(response.body)
   end
 end
