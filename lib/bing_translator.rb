@@ -38,14 +38,15 @@ class BingTranslator
 
     # Important notice: param order makes sense in SOAP. Do not reorder or delete!
     params = {
-      'texts'       => { 'arr:string' => texts },
       'from'        => params[:from].to_s,
       'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
     }
-
-    array_wrap(result(:translate_array, params)[:translate_array_response]).map { |r| r[:translated_text] }
+    data = texts.map { |text| { 'Text' => text } }.to_json
+    response_json = api_call('/translate', params, data)
+    response_json.map do |translation|
+      target_translation = translation['translations'].find { |result| result['to'] == params['to'].to_s }
+      target_translation['text'] if target_translation
+    end
   end
 
   def translate_array2(texts, params = {})
