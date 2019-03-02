@@ -52,16 +52,17 @@ class BingTranslator
   def translate_array2(texts, params = {})
     raise 'Must provide :to.' if params[:to].nil?
 
-    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
     params = {
-      'texts'       => { 'arr:string' => texts },
-      'from'        => params[:from].to_s,
-      'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
+      'includeAlignment' => true,
+      'from'             => params[:from].to_s,
+      'to'               => params[:to].to_s
     }
-
-    array_wrap(result(:translate_array2, params)[:translate_array2_response]).map { |r| [r[:translated_text], r[:alignment]] }
+    data = texts.map { |text| { 'Text' => text } }.to_json
+    response_json = api_call('/translate', params, data)
+    response_json.map do |translation|
+      target_translation = translation['translations'].find { |result| result['to'] == params['to'].to_s }
+      [target_translation['text'], target_translation['alignment']['proj']] if target_translation
+    end
   end
 
   def detect(text)
@@ -149,16 +150,5 @@ class BingTranslator
     request.body = data
 
     JSON.parse(http.request(request).body)
-  end
-
-  # Private: Array#wrap based on ActiveSupport extension
-  def array_wrap(object)
-    if object.nil?
-      []
-    elsif object.respond_to?(:to_ary)
-      object.to_ary || [object]
-    else
-      [object]
-    end
   end
 end
