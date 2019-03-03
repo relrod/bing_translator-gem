@@ -133,12 +133,17 @@ class BingTranslator
   end
 
   def supported_language_codes
-    response_json = api_client.get('/languages', params: { scope: 'translation' }, authorization: false)
+    response_json = api_client.get('/languages',
+                                   params: { scope: 'translation' },
+                                   authorization: false)
     response_json['translation'].keys
   end
 
   def language_names(codes, locale = 'en')
-    response_json = api_client.get('/languages', params: { scope: 'translation' }, headers: { 'Accept-Language' => locale }, authorization: false)
+    response_json = api_client.get('/languages',
+                                   params: { scope: 'translation' },
+                                   headers: { 'Accept-Language' => locale },
+                                   authorization: false)
     codes.map do |code|
       response = response_json['translation'][code.to_s]
       response['name'] unless response.nil?
