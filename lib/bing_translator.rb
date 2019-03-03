@@ -101,9 +101,7 @@ class BingTranslator
   end
 
   def translate(text, params)
-    translations = translation_request([text], params)
-    translation = translations.first
-    translation['text'] if translation
+    translate_array([text], params).first
   end
 
   def translate_array(texts, params = {})
