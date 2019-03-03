@@ -37,7 +37,7 @@ describe BingTranslator do
     end
 
     it 'translates texts in html' do
-      result = translator.translate long_html_text, from: :en, to: :ru, html: true
+      result = translator.translate long_html_text, from: :en, to: :ru, textType: 'html'
       expect(result.size).to be > 1000
       expect(result.to_s).to have_tag('p')
       expect(result.to_s).to have_tag('code')

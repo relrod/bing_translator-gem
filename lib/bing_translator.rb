@@ -100,47 +100,23 @@ class BingTranslator
     @api_client = ApiClient.new(subscription_key, skip_ssl_verify)
   end
 
-  def translate(text, from: nil, to:, html: false)
-    raise 'Must provide :to.' if to.nil?
-
-    params = { to: to, textType: html ? 'html' : 'plain' }
-    params[:from] = from if from
-    data = [{ 'Text' => text }].to_json
-
-    response_json = api_client.post('/translate', params: params, data: data)
-    translations = Array(response_json.first['translations'])
-    target_translation = translations.find { |result| result['to'] == to.to_s }
-    target_translation['text'] if target_translation
+  def translate(text, params)
+    translations = translation_request([text], params)
+    translation = translations.first
+    translation['text'] if translation
   end
 
-  def translate_array(texts, params = {}, include_alignment = false)
-    raise 'Must provide :to.' if params[:to].nil?
-
-    params = {
-      'from'             => params[:from].to_s,
-      'to'               => params[:to].to_s
-    }
-    data = texts.map { |text| { 'Text' => text } }.to_json
-    response_json = api_client.post('/translate', params: params, data: data)
-    response_json.map do |translation|
-      target_translation = translation['translations'].find { |result| result['to'] == params['to'].to_s }
-      target_translation['text'] if target_translation
+  def translate_array(texts, params = {})
+    translations = translation_request(texts, params)
+    translations.map do |translation|
+      translation['text'] if translation.is_a?(Hash)
     end
   end
 
   def translate_array2(texts, params = {})
-    raise 'Must provide :to.' if params[:to].nil?
-
-    params = {
-      'includeAlignment' => true,
-      'from'             => params[:from].to_s,
-      'to'               => params[:to].to_s
-    }
-    data = texts.map { |text| { 'Text' => text } }.to_json
-    response_json = api_client.post('/translate', params: params, data: data)
-    response_json.map do |translation|
-      target_translation = translation['translations'].find { |result| result['to'] == params['to'].to_s }
-      [target_translation['text'], target_translation['alignment']['proj']] if target_translation
+    translations = translation_request(texts, params.merge('includeAlignment' => true))
+    translations.map do |translation|
+      [translation['text'], translation['alignment']['proj']] if translation.is_a?(Hash)
     end
   end
 
@@ -153,7 +129,7 @@ class BingTranslator
   end
 
   def speak(text, params = {})
-    raise 'Not supported since 3.0.0'
+    raise Exception.new('Not supported since 3.0.0')
   end
 
   def supported_language_codes
@@ -172,4 +148,15 @@ class BingTranslator
   private
 
   attr_reader :api_client
+
+  def translation_request(texts, params)
+    raise Exception.new('Must provide :to.') if params[:to].nil?
+
+    data = texts.map { |text| { 'Text' => text } }.to_json
+    response_json = api_client.post('/translate', params: params, data: data)
+    response_json.map do |translation|
+      # There should be just one translation, but who knows...
+      translation['translations'].find { |result| result['to'] == params[:to].to_s }
+    end
+  end
 end
