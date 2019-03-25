@@ -7,186 +7,159 @@ require 'cgi'
 require 'uri'
 require 'net/http'
 require 'net/https'
-require 'nokogiri'
 require 'json'
-require 'savon'
 
 class BingTranslator
-  WSDL_URI = 'http://api.microsofttranslator.com/V2/soap.svc?wsdl'.freeze
-  NAMESPACE_URI = 'http://api.microsofttranslator.com/V2'.freeze
-  COGNITIVE_ACCESS_TOKEN_URI = URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
-
   class Exception < StandardError; end
 
-  def initialize(subscription_key, options = {})
-    @skip_ssl_verify = options.fetch(:skip_ssl_verify, false)
-    @subscription_key = subscription_key
+  class ApiClient
+    API_HOST = 'https://api.cognitive.microsofttranslator.com'.freeze
+    COGNITIVE_ACCESS_TOKEN_URI =
+      URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
+
+    def initialize(subscription_key, skip_ssl_verify)
+      @subscription_key = subscription_key
+      @skip_ssl_verify = skip_ssl_verify
+    end
+
+    def get(path, params: {}, headers: {}, authorization: false)
+      uri = request_uri(path, params)
+      request = Net::HTTP::Get.new(uri.request_uri, default_headers(authorization).merge(headers))
+
+      json_response(uri, request)
+    end
+
+    def post(path, params: {}, headers: {}, data: {}, authorization: true)
+      uri = request_uri(path, params)
+
+      request = Net::HTTP::Post.new(uri.request_uri, default_headers(authorization).merge(headers))
+      request.body = data
+
+      json_response(uri, request)
+    end
+
+    private
+
+    def default_headers(authorization = true)
+      headers = { 'Content-Type' => 'application/json' }
+      headers['Authorization'] = "Bearer #{access_token}" if authorization
+      headers
+    end
+
+    def json_response(uri, request)
+      http = http_client(uri)
+
+      response = http.request(request)
+
+      raise Exception.new("Unsuccessful API call: Code: #{response.code}") unless response.code == '200'
+      JSON.parse(response.body)
+    end
+
+    def http_client(uri)
+      http = Net::HTTP.new(uri.host, 443)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+      http
+    end
+
+    def request_uri(path, params)
+      encoded_params = URI.encode_www_form(params.merge('api-version' => '3.0'))
+      uri = URI.parse("#{API_HOST}#{path}")
+      uri.query = encoded_params
+      uri
+    end
+
+    def access_token
+      if @access_token.nil? || Time.now < @access_token_expiration_time
+        @access_token = request_new_access_token
+      end
+      @access_token
+    end
+
+    def request_new_access_token
+      headers = {
+        'Ocp-Apim-Subscription-Key' => @subscription_key
+      }
+
+      http = Net::HTTP.new(COGNITIVE_ACCESS_TOKEN_URI.host, COGNITIVE_ACCESS_TOKEN_URI.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+
+      response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
+      if response.code != '200'
+        raise Exception.new('Invalid credentials')
+      else
+        @access_token_expiration_time = Time.now + 480
+        response.body
+      end
+    end
   end
 
-  def translate(text, params = {})
-    raise 'Must provide :to.' if params[:to].nil?
+  def initialize(subscription_key, options = {})
+    skip_ssl_verify = options.fetch(:skip_ssl_verify, false)
+    @api_client = ApiClient.new(subscription_key, skip_ssl_verify)
+  end
 
-    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
-    params = {
-      'text'        => text.to_s,
-      'from'        => params[:from].to_s,
-      'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
-    }
-
-    result(:translate, params)
+  def translate(text, params)
+    translate_array([text], params).first
   end
 
   def translate_array(texts, params = {})
-    raise 'Must provide :to.' if params[:to].nil?
-
-    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
-    params = {
-      'texts'       => { 'arr:string' => texts },
-      'from'        => params[:from].to_s,
-      'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
-    }
-
-    array_wrap(result(:translate_array, params)[:translate_array_response]).map { |r| r[:translated_text] }
+    translations = translation_request(texts, params)
+    translations.map do |translation|
+      translation['text'] if translation.is_a?(Hash)
+    end
   end
 
   def translate_array2(texts, params = {})
-    raise 'Must provide :to.' if params[:to].nil?
-
-    # Important notice: param order makes sense in SOAP. Do not reorder or delete!
-    params = {
-      'texts'       => { 'arr:string' => texts },
-      'from'        => params[:from].to_s,
-      'to'          => params[:to].to_s,
-      'category'    => 'general',
-      'contentType' => params[:content_type] || 'text/plain'
-    }
-
-    array_wrap(result(:translate_array2, params)[:translate_array2_response]).map { |r| [r[:translated_text], r[:alignment]] }
-   end
-
-  def detect(text)
-    params = {
-      'text'     => text.to_s,
-      'language' => ''
-    }
-
-    if lang = result(:detect, params)
-      lang.to_sym
+    translations = translation_request(texts, params.merge('includeAlignment' => true))
+    translations.map do |translation|
+      [translation['text'], translation['alignment']['proj']] if translation.is_a?(Hash)
     end
   end
 
-  # format:   'audio/wav' [default] or 'audio/mp3'
-  # language: valid translator language code
-  # options:  'MinSize' [default] or 'MaxQuality'
+  def detect(text)
+    data = [{ 'Text' => text }].to_json
+
+    response_json = api_client.post('/detect', data: data)
+    best_detection = response_json.sort_by { |detection| -detection['score'] }.first
+    best_detection['language'].to_sym
+  end
+
   def speak(text, params = {})
-    raise 'Must provide :language' if params[:language].nil?
-
-    params = {
-      'text'     => text.to_s,
-      'language' => params[:language].to_s,
-      'format'   => params[:format] || 'audio/wav',
-      'options'  => params[:options] || 'MinSize'
-    }
-
-    uri = URI.parse(result(:speak, params))
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    if uri.scheme == 'https'
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
-    end
-    results = http.get(uri.to_s, 'Authorization' => "Bearer #{get_access_token['access_token']}")
-
-    if results.response.code.to_i == 200
-      results.body
-    else
-      html = Nokogiri::HTML(results.body)
-      raise Exception, html.xpath('//text()').remove.map(&:to_s).join(' ')
-    end
+    raise Exception.new('Not supported since 3.0.0')
   end
 
   def supported_language_codes
-    result(:get_languages_for_translate)[:string]
+    response_json = api_client.get('/languages',
+                                   params: { scope: 'translation' },
+                                   authorization: false)
+    response_json['translation'].keys
   end
 
   def language_names(codes, locale = 'en')
-    response = result(:get_language_names, locale: locale, languageCodes: { 'a:string' => codes }) do
-      attributes 'xmlns:a' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
+    response_json = api_client.get('/languages',
+                                   params: { scope: 'translation' },
+                                   headers: { 'Accept-Language' => locale },
+                                   authorization: false)
+    codes.map do |code|
+      response = response_json['translation'][code.to_s]
+      response['name'] unless response.nil?
     end
-
-    response[:string]
   end
 
   private
 
-  # Get a new access token and set it internally as @access_token
-  #
-  # @return {hash}
-  # Returns existing @access_token if we don't need a new token yet,
-  # or returns the one just obtained.
-  def get_access_token
-    headers = {
-      'Ocp-Apim-Subscription-Key' => @subscription_key
-    }
+  attr_reader :api_client
 
-    http = Net::HTTP.new(COGNITIVE_ACCESS_TOKEN_URI.host, COGNITIVE_ACCESS_TOKEN_URI.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+  def translation_request(texts, params)
+    raise Exception.new('Must provide :to.') if params[:to].nil?
 
-    response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
-
-    @access_token = {
-      'access_token' => response.body,
-      'expires_at' => Time.now + 480
-    }
-  end
-
-  # Performs actual request to Bing Translator SOAP API
-  def result(action, params = {}, &block)
-    soap_client.call(action, message: build_soap_message(params), &block).body[:"#{action}_response"][:"#{action}_result"]
-  rescue Savon::SOAPFault => e
-    raise Exception, e.message
-  end
-
-  # Specify SOAP namespace in tag names (see https://github.com/savonrb/savon/issues/340 )
-  #
-  # @return [Hash]
-  def build_soap_message(params)
-    Hash[params.map { |k, v| ["v2:#{k}", v] }]
-  end
-
-  # Private: Constructs SOAP client
-  #
-  # Construct and store new client when called first time.
-  # Return stored client while access token is fresh.
-  # Construct and store new client when token have been expired.
-  def soap_client
-    return @client if @client && @access_token && @access_token['expires_at'] &&
-                      (Time.now < @access_token['expires_at'])
-
-    @client = Savon.client(
-      wsdl: WSDL_URI,
-      namespace: NAMESPACE_URI,
-      namespace_identifier: :v2,
-      namespaces: {
-        'xmlns:arr' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
-      },
-      headers: { 'Authorization' => "Bearer #{get_access_token['access_token']}" }
-    )
-  end
-
-  # Private: Array#wrap based on ActiveSupport extension
-  def array_wrap(object)
-    if object.nil?
-      []
-    elsif object.respond_to?(:to_ary)
-      object.to_ary || [object]
-    else
-      [object]
+    data = texts.map { |text| { 'Text' => text } }.to_json
+    response_json = api_client.post('/translate', params: params, data: data)
+    response_json.map do |translation|
+      # There should be just one translation, but who knows...
+      translation['translations'].find { |result| result['to'] == params[:to].to_s }
     end
   end
 end
