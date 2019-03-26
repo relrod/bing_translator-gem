@@ -70,7 +70,7 @@ class BingTranslator
     end
 
     def access_token
-      if @access_token.nil? || Time.now < @access_token_expiration_time
+      if @access_token.nil? || Time.now >= @access_token_expiration_time
         @access_token = request_new_access_token
       end
       @access_token

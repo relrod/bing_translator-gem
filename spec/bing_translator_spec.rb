@@ -16,6 +16,8 @@ describe BingTranslator do
 
   let(:translator) { described_class.new(api_key, skip_ssl_verify: false) }
 
+  # These are integration tests, require actual subscription key to be present in the
+  # env variable COGNITIVE_SUBSCRIPTION_KEY.
   describe '#translate' do
     it 'translates text' do
       result = translator.translate message_en, from: :en, to: :ru
@@ -128,6 +130,63 @@ describe BingTranslator do
     context 'trying to translate something twice' do
       it 'throws the BingTranslator::Exception exception every time' do
         2.times { expect { subject }.to raise_error(BingTranslator::Exception) }
+      end
+    end
+  end
+
+  describe BingTranslator::ApiClient do
+    let(:instance) { described_class.new('dumb-key', false) }
+    let(:params) { {} }
+    let(:headers) { {} }
+    let(:authorization) { true }
+    let(:path) { '/path' }
+    let(:response_code) { 200 }
+    let(:response_body) { {}.to_json }
+    let(:url_params) { '?api-version=3.0' }
+
+    let!(:authorization_stub) do
+      stub_request(:post, described_class::COGNITIVE_ACCESS_TOKEN_URI)
+        .with(headers: {
+          'Ocp-Apim-Subscription-Key' => 'dumb-key'
+        })
+        .to_return(status: 200, body: 'token', headers: {})
+    end
+
+    describe '#post' do
+      def action
+        instance.post(path, params: params, headers: headers, authorization: authorization)
+      end
+      subject { action }
+
+      let!(:request_stub) do
+        stub_request(:post, "#{described_class::API_HOST}#{path}#{url_params}")
+          .with(headers: {
+            'Authorization' => 'Bearer token',
+            'Content-Type' => 'application/json'
+          })
+          .to_return(status: response_code, body: response_body, headers: {})
+      end
+
+      it 'obtains a new authentication token' do
+        subject
+        expect(authorization_stub).to have_been_requested
+      end
+
+      context 'when API request is made two times' do
+        it 'caches the authorization token' do
+          2.times { action }
+          expect(authorization_stub).to have_been_requested.once
+        end
+
+        context 'but the last request was made more than 8 minutes ago' do
+          it 'requests a new token' do
+            action
+            Timecop.travel(Time.now + 481)
+            action
+            expect(authorization_stub).to have_been_requested.twice
+            Timecop.return
+          end
+        end
       end
     end
   end
