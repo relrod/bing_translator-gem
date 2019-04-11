@@ -14,7 +14,7 @@ To use this rubygem:
 
 With bundler:
 
-    gem "bing_translator", "~> 5.2.0"
+    gem "bing_translator", "~> 6.0.0"
 
 Information
 ===========
@@ -51,21 +51,29 @@ translator = BingTranslator.new('COGNITIVE_SUBSCRIPTION_KEY')
 spanish = translator.translate('Hello. This will be translated!', :from => 'en', :to => 'es')
 spanish = translator.translate('Hello. This will be translated!', :to => 'es')
 
+# HTML Translations
+spanish_html = translator.translate('<b>Hello</b>', to: 'es', textType: 'html') 
+
 # Translation of multiple strings
 
 result = translator.translate_array(['Hello. This will be translated!', 'This will be translated too!'], :from => :en, :to => :fr)
 
 # Translation of multiple strings, with word alignment information
 
-result = translator.translate_array(['Hello. This will be translated!', 'This will be translated too!'], :from => :en, :to => :fr)
+result = translator.translate_array2(['Hello. This will be translated!', 'This will be translated too!'], :from => :en, :to => :fr)
 
 # Language Detection
 
 locale = translator.detect('Hello. This will be translated!') # => :en
-
-# The speak method calls a text-to-speech interface in the supplied language.
-# It does not translate the text. Format can be 'audio/mp3' or 'audio/wav'
-
-audio = translator.speak('Hello. This will be spoken!', :language => :en, :format => 'audio/mp3', :options => 'MaxQuality')
-File.write('file.mp3', audio, mode: 'wb')
 ```
+
+Migration to API V3
+===================
+Since version 6.0.0, this gem uses Microsoft Cognitive Translation Services in version 3. 
+
+Microsoft is dropping the support of Cognitive Translation Services Version 2 in April 2019. If you want to continue using this gem, migrate to 6.0.0.
+
+I did my best to keep the backward compatibility with the previous gem version, but there are some breaking changes:
+* I dropped the support for the `#speak` method. If you need it, please create a GitHub issue, and I'll consider supporting it too.
+* I changed the interface for HTML translations. See the documentation above. 
+* In the API v3, Microsoft does not allow translation of texts longer than 5000 characters. 
