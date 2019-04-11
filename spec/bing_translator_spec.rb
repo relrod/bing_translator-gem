@@ -172,6 +172,14 @@ describe BingTranslator do
         expect(authorization_stub).to have_been_requested
       end
 
+      context 'when API returns an error response' do
+        let(:response_code) { 400 }
+
+        it 'throws an error' do
+          expect { subject }.to raise_error(BingTranslator::Exception)
+        end
+      end
+
       context 'when API request is made two times' do
         it 'caches the authorization token' do
           2.times { action }
