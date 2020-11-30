@@ -17,9 +17,11 @@ class BingTranslator
     COGNITIVE_ACCESS_TOKEN_URI =
       URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
 
-    def initialize(subscription_key, skip_ssl_verify)
+    def initialize(subscription_key, skip_ssl_verify, read_timeout = 60, open_timeout = 60)
       @subscription_key = subscription_key
       @skip_ssl_verify = skip_ssl_verify
+      @read_timeout = read_timeout
+      @open_timeout = open_timeout
     end
 
     def get(path, params: {}, headers: {}, authorization: false)
@@ -59,6 +61,8 @@ class BingTranslator
       http = Net::HTTP.new(uri.host, 443)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
+      http.read_timeout = @read_timeout
+      http.open_timeout = @open_timeout
       http
     end
 
@@ -97,7 +101,9 @@ class BingTranslator
 
   def initialize(subscription_key, options = {})
     skip_ssl_verify = options.fetch(:skip_ssl_verify, false)
-    @api_client = ApiClient.new(subscription_key, skip_ssl_verify)
+    read_timeout = options.fetch(:read_timeout, 60)
+    open_timeout = options.fetch(:open_timeout, 60)
+    @api_client = ApiClient.new(subscription_key, skip_ssl_verify, read_timeout, open_timeout)
   end
 
   def translate(text, params)
