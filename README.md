@@ -14,7 +14,7 @@ To use this rubygem:
 
 With bundler:
 
-    gem "bing_translator", "~> 6.0.0"
+    gem "bing_translator", "~> 6.1.0"
 
 Information
 ===========
@@ -27,7 +27,7 @@ expired (X seconds from when we requested the last token, where X is given
 to us when we make the request. As of this writing, X is consistently 8
 minutes).
 
-Getting a free Azure account  
+Getting a free Azure account
 ==============================
 
 To be able to use the API freely, do the following:
@@ -52,7 +52,7 @@ spanish = translator.translate('Hello. This will be translated!', :from => 'en',
 spanish = translator.translate('Hello. This will be translated!', :to => 'es')
 
 # HTML Translations
-spanish_html = translator.translate('<b>Hello</b>', to: 'es', textType: 'html') 
+spanish_html = translator.translate('<b>Hello</b>', to: 'es', textType: 'html')
 
 # Translation of multiple strings
 
@@ -69,11 +69,11 @@ locale = translator.detect('Hello. This will be translated!') # => :en
 
 Migration to API V3
 ===================
-Since version 6.0.0, this gem uses Microsoft Cognitive Translation Services in version 3. 
+Since version 6.0.0, this gem uses Microsoft Cognitive Translation Services in version 3.
 
 Microsoft is dropping the support of Cognitive Translation Services Version 2 in April 2019. If you want to continue using this gem, migrate to 6.0.0.
 
 I did my best to keep the backward compatibility with the previous gem version, but there are some breaking changes:
 * I dropped the support for the `#speak` method. If you need it, please create a GitHub issue, and I'll consider supporting it too.
-* I changed the interface for HTML translations. See the documentation above. 
-* In the API v3, Microsoft does not allow translation of texts longer than 5000 characters. 
+* I changed the interface for HTML translations. See the documentation above.
+* In the API v3, Microsoft does not allow translation of texts longer than 5000 characters.
