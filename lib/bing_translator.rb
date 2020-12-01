@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
-
-# (c) 2011-present. Ricky Elrod <ricky@elrod.me>
-# Released under the MIT license.
+# Released under the MIT license, see LICENSE.
 require 'rubygems'
 require 'cgi'
 require 'uri'
