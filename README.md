@@ -1,7 +1,7 @@
 Bing Translator
 ===============
 
-[![Gem](https://img.shields.io/gem/v/bing_translator.svg)](https://rubygems.org/gems/bing_translator/) [![Build Status](https://travis-ci.org/relrod/bing_translator-gem.svg?branch=master)](https://travis-ci.org/relrod/bing_translator-gem)
+[![Gem](https://img.shields.io/gem/v/bing_translator.svg)](https://rubygems.org/gems/bing_translator/) ![bing_translator tests](https://github.com/relrod/bing_translator-gem/workflows/bing_translator%20tests/badge.svg)
 
 This gem wraps the Microsoft Cognitive Services Translator API.
 
