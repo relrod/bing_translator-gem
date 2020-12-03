@@ -26,5 +26,6 @@ jobs:
         env:
           COGNITIVE_SUBSCRIPTION_KEY: ${{ secrets.COGNITIVE_SUBSCRIPTION_KEY }}
         run: |
+          gem install bundler
           bundle install
           rspec --color --tty
