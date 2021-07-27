@@ -9,6 +9,10 @@ require 'json'
 
 class BingTranslator
   class Exception < StandardError; end
+  class ApiException < BingTranslator::Exception; end
+  class UsageException < BingTranslator::Exception; end
+  class UnavailableException < BingTranslator::Exception; end
+  class AuthenticationException < BingTranslator::Exception; end
 
   class ApiClient
     API_HOST = 'https://api.cognitive.microsofttranslator.com'.freeze
@@ -51,7 +55,7 @@ class BingTranslator
 
       response = http.request(request)
 
-      raise Exception.new("Unsuccessful API call: Code: #{response.code}") unless response.code == '200'
+      raise ApiException.new("Unsuccessful API call: Code: #{response.code}") unless response.code == '200'
       JSON.parse(response.body)
     end
 
@@ -88,8 +92,10 @@ class BingTranslator
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
 
       response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
-      if response.code != '200'
-        raise Exception.new('Invalid credentials')
+      if response.code == '503'
+        raise UnavailableException.new('503: Credentials server unavailable')
+      elsif response.code != '200'
+        raise AuthenticationException.new('Invalid credentials')
       else
         @access_token_expiration_time = Time.now + 480
         response.body
@@ -131,7 +137,7 @@ class BingTranslator
   end
 
   def speak(text, params = {})
-    raise Exception.new('Not supported since 3.0.0')
+    raise UsageException.new('Not supported since 3.0.0')
   end
 
   def supported_language_codes
@@ -157,7 +163,7 @@ class BingTranslator
   attr_reader :api_client
 
   def translation_request(texts, params)
-    raise Exception.new('Must provide :to.') if params[:to].nil?
+    raise UsageException.new('Must provide :to.') if params[:to].nil?
 
     data = texts.map { |text| { 'Text' => text } }.to_json
     response_json = api_client.post('/translate', params: params, data: data)
