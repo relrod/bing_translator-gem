@@ -99,7 +99,7 @@ class BingTranslator
       when Net::HTTPServerError
         raise UnavailableException.new("#{response.code}: Credentials server unavailable")
       else
-        raise AuthenticationException.new('Invalid credentials')
+        raise Exception.new("Unsuccessful Access Token call: Code: #{response.code} (Invalid credentials?)")
       end
     end
   end
@@ -168,9 +168,10 @@ class BingTranslator
 
     data = texts.map { |text| { 'Text' => text } }.to_json
     response_json = api_client.post('/translate', params: params, data: data)
+    to_lang = params[:to].to_s
     response_json.map do |translation|
       # There should be just one translation, but who knows...
-      translation['translations'].find { |result| result['to'] == params[:to].to_s }
+      translation['translations'].find { |result| result['to'].casecmp(to_lang).zero? }
     end
   end
 end
