@@ -92,13 +92,14 @@ class BingTranslator
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if @skip_ssl_verify
 
       response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
-      if response.code == '503'
-        raise UnavailableException.new('503: Credentials server unavailable')
-      elsif response.code != '200'
-        raise AuthenticationException.new('Invalid credentials')
-      else
+      case response
+      when Net::HTTPSuccess
         @access_token_expiration_time = Time.now + 480
         response.body
+      when Net::HTTPServerError
+        raise UnavailableException.new("#{response.code}: Credentials server unavailable")
+      else
+        raise AuthenticationException.new('Invalid credentials')
       end
     end
   end
