@@ -4,6 +4,9 @@ require_relative 'spec_helper'
 describe BingTranslator do
   include RSpecHtmlMatchers
 
+    COGNITIVE_ACCESS_TOKEN_URI =
+      URI.parse('https://api.cognitive.microsoft.com/sts/v1.0/issueToken').freeze
+
   def load_file(filename)
     File.read(File.join(File.dirname(__FILE__), 'etc', filename))
   end
@@ -55,6 +58,28 @@ describe BingTranslator do
 
       result = translator.translate 'Diese Meldung sollte übersetzt werden', to: :en
       expect(result).to eq message_en
+    end
+
+    context 'when the authentication server is offline' do
+      it 'throws a reasonable error when a 500 error is encountered' do
+        stub_request(:any, COGNITIVE_ACCESS_TOKEN_URI).
+          to_return(status: [500, "Internal Server Error"])
+
+        expect { translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::Exception)
+        expect { translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::UnavailableException)
+      end
+
+      it 'throws a reasonable error with a different 5XX error' do
+        stub_request(:any, COGNITIVE_ACCESS_TOKEN_URI).
+          to_return(status: [503, "Service Unavailable"])
+
+        expect { translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::Exception)
+        expect { translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::UnavailableException)
+      end
     end
 
     context 'when invalid language is specified' do
