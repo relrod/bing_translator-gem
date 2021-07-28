@@ -89,7 +89,7 @@ class BingTranslator
 
       response = http.post(COGNITIVE_ACCESS_TOKEN_URI.path, '', headers)
       if response.code != '200'
-        raise Exception.new('Invalid credentials')
+        raise Exception.new("Unsuccessful Access Token call: Code: #{response.code} (Invalid credentials?)")
       else
         @access_token_expiration_time = Time.now + 480
         response.body
