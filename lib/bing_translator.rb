@@ -99,7 +99,7 @@ class BingTranslator
       when Net::HTTPServerError
         raise UnavailableException.new("#{response.code}: Credentials server unavailable")
       else
-        raise Exception.new("Unsuccessful Access Token call: Code: #{response.code} (Invalid credentials?)")
+        raise AuthenticationException.new("Unsuccessful Access Token call: Code: #{response.code} (Invalid credentials?)")
       end
     end
   end

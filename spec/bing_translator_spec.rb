@@ -92,6 +92,29 @@ describe BingTranslator do
       end
     end
 
+    context 'when the authentication server is online' do
+      it 'throws an AuthenticationException if the authentication key is invalid' do
+        fake_api_key = '32'
+        authenticating_translator = BingTranslator.new(fake_api_key, skip_ssl_verify: false)
+
+        expect { authenticating_translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::Exception)
+        expect { authenticating_translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::AuthenticationException)
+      end
+
+      it 'throws an AuthenticationException if HTTP response code is not 200 or 5XX' do
+        authenticating_translator = BingTranslator.new(api_key, skip_ssl_verify: false)
+        stub_request(:any, COGNITIVE_ACCESS_TOKEN_URI).
+          to_return(status: [404, 'Not Found'])
+
+        expect { authenticating_translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::Exception)
+        expect { authenticating_translator.translate 'hola', from: :es, to: :en }
+          .to raise_error(BingTranslator::AuthenticationException)
+      end
+    end
+
     context 'when invalid language is specified' do
       it 'throws a reasonable error' do
         expect { translator.translate 'hola', from: :invlaid, to: :en }
