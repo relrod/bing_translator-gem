@@ -103,7 +103,7 @@ describe BingTranslator do
         expect { authenticating_translator.translate 'hola', from: :es, to: :en }
           .to raise_error(BingTranslator::Exception)
         expect { authenticating_translator.translate 'hola', from: :es, to: :en }
-          .to raise_error(BingTranslator::AuthenticationException, "Unsuccessful Access Token call: Code: 303 (Invalid credentials?)")
+          .to raise_error(BingTranslator::AuthenticationException, "Unsuccessful Access Token call: Code: 401 (Invalid credentials?)")
       end
 
       it 'throws an AuthenticationException if HTTP response code is not 200 or 5XX' do
