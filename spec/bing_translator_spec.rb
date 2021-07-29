@@ -1,6 +1,11 @@
 # coding: utf-8
 require_relative 'spec_helper'
 
+# Stricter reuse of API client instances to reduce 429 errors
+instance_cache = Hash.new do |hash, api_key|
+  hash[api_key] = BingTranslator.new(api_key, skip_ssl_verify: false)
+end
+
 describe BingTranslator do
   include RSpecHtmlMatchers
 
@@ -18,7 +23,7 @@ describe BingTranslator do
   let(:long_unicode_text) { load_file('long_unicode_text.txt') }
   let(:long_html_text) { load_file('long_text.html') }
 
-  let(:translator) { described_class.new(api_key, skip_ssl_verify: false) }
+  let(:translator) { instance_cache[api_key] }
 
   # These are integration tests, require actual subscription key to be present in the
   # env variable COGNITIVE_SUBSCRIPTION_KEY.
@@ -118,7 +123,7 @@ describe BingTranslator do
   describe '#translate_array' do
     it 'translates array of texts' do
       result = translator.translate_array [message_en, message_en_other], from: :en, to: :fr
-      expect(result).to eq ['Ce message doit être traduit', 'Ce message doit être traduit aussi']
+      expect(result).to eq ['Ce message doit être traduit', 'Ce message devrait également être traduit']
     end
   end
 
