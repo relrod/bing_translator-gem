@@ -14,7 +14,14 @@ To use this rubygem:
 
 With bundler:
 
-    gem "bing_translator", "~> 6.1.0"
+    gem "bing_translator", "~> 6.2.0"
+
+Changelog
+---------
+
+* 6.0.0: [#43 Migration to Microsoft Translator API v3](https://github.com/relrod/bing_translator-gem/pull/43)
+* 6.1.0: [#44 Allow customizing the HTTP timeouts](https://github.com/relrod/bing_translator-gem/pull/44)
+* 6.2.0: [#47 Distinguish errors by Exception class](https://github.com/relrod/bing_translator-gem/pull/47)
 
 Information
 ===========
