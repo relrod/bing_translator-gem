@@ -41,7 +41,8 @@ describe BingTranslator do
 
     it 'translates text to complex language code' do
       result = translator.translate message_en, from: :en, to: :'fr-ca'
-      expect(result).to eq 'Ce message doit être traduit'
+      # Sometimes different versions are returned
+      expect(['Ce message doit être traduit', 'Ce message devrait être traduit']).to include(result)
     end
 
     it 'translates long texts (up to allowed limit)' do
