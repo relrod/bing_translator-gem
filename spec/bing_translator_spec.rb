@@ -150,7 +150,7 @@ describe BingTranslator do
   describe '#translate_array' do
     it 'translates array of texts' do
       result = translator.translate_array [message_en, message_en_other], from: :en, to: :fr
-      expect(result).to eq ['Ce message doit être traduit', 'Ce message devrait également être traduit']
+      expect(result).to eq ['Ce message doit être traduit', 'Ce message doit également être traduit']
     end
   end
 
